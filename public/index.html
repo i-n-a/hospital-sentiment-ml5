@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Healthcare Sentiment Analysis (ml5.js)</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/ml5@1/dist/ml5.js"></script>
+</head>
+<body>
+    <main>
+      <h1>Análise de Sentimento do Hospital (ml5.js)</h1>
+
+      <section id="input-section">
+        <label for="commentInput">Comentário</label><br />
+        <textarea id="commentInput" rows="4" cols="60" placeholder="Digite um comentário aqui..."></textarea>
+        <br />
+        <button id="predictBtn">Prever sentimento</button>
+      </section>
+
+      <section id="result-section">
+        <h2>Resultado</h2>
+        <p id="resultText">Nenhuma previsão ainda.</p>
+      </section>
+  </main>
+
+  <script src="sketch.js"></script>
+</body>
+</html>
