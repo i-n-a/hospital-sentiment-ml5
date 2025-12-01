@@ -1,75 +1,99 @@
-// ====== Step 2: Text Preprocessing ======
+// ====== FEATURE/03-TRAINING-DATA ======
+// Goal: Load real Portuguese hospital feedback comments + build dynamic vocabulary
+// Why: Neural network needs labeled examples + consistent vocabulary to learn sentiment patterns
+// What happens: 
+// 1. Fetch sample-sentiment.json (18 real examples)
+// 2. Extract ALL unique Portuguese words → create realVocab array
+// 3. Use realVocab for textToVector() instead of testVocab
+// Next step: ml5.neuralNetwork will train ON these exact vectors + labels
 
-// Goal:
-// In this step, we prepare Portuguese patient comments for ML models.
-// We clean and tokenize text, then convert it into numeric vectors (bag-of-words).
-// This numeric representation is required for training and predicting with ml5.neuralNetwork.
+console.log("Hospital Sentiment Analysis - Step 3: Training Data");
 
-// Why this matters:
-// Neural networks require numbers as input (not raw text).
-// The bag-of-words vector captures presence of key words in a fixed-length array,
-// allowing the model to learn sentiment patterns from Portuguese words.
-
-// What the code does:
-// - cleanText(): normalizes Portuguese text (removes punctuation, lowers case, trims whitespace)
-// - tokenize(): splits cleaned text into an array of words (tokens)
-// - textToVector(): creates a binary vector of word presence from the vocabulary
-// - Shows the cleaned text, tokens, and vector length in the UI for debugging
-
-// Later steps (3-5) will:
-// - Load real labeled data from JSON,
-// - Build vocabulary from data
-// - Train ml5.neuralNetwork on vectors and labels
-// - Predict sentiment on new comments
-
-// This is the foundation for the Portuguese sentiment analysis tool.
-
-console.log("App loaded");
-
-// Grab elements
+// UI elements
 const commentInput = document.getElementById("commentInput");
 const predictBtn = document.getElementById("predictBtn");
 const resultText = document.getElementById("resultText");
 
-// --- TEXT PROCESSING (NEW) ---
-// Import preprocessing functions
-import { cleanText, tokenize, textToVector } from '../src/text-utils.js';
+// ====== TRAINING DATA + VOCABULARY ======
+let trainingData = [];
+let realVocab = [];
 
-// Tiny fake vocabulary for testing
+// Load JSON data + build vocabulary automatically from it
+async function loadTrainingData() {
+  try {
+    console.log("📥 Loading training data...");
+    const response = await fetch('../data/sample-sentiment.json');
+    trainingData = await response.json();
+    
+    // Build REAL vocabulary from YOUR 18 hospital examples
+    const { buildVocabulary } = await import('../src/text-utils.js');
+    realVocab = buildVocabulary(trainingData);
+    
+    console.log(`✅ Loaded ${trainingData.length} examples`);
+    console.log(`📚 Vocabulary size: ${realVocab.length} words`);
+    console.log('Sample vocab:', realVocab.slice(0, 10));
+    console.log('Sample data:', trainingData.slice(0, 2));
+    
+    // Update UI status
+    resultText.innerHTML = `Data loaded: ${trainingData.length} examples, ${realVocab.length} words in vocabulary`;
+  } catch (error) {
+    console.error('❌ Error loading data:', error);
+    resultText.innerHTML = '❌ Error loading training data';
+  }
+}
+
+// ====== TEXT PROCESSING (from Step 2) ======
+const { cleanText, tokenize, textToVector } = await import('../src/text-utils.js');
+
+// Fallback test vocab (used before real data loads)
 const testVocab = ['bom', 'ruim', 'espera', 'enfermeira', 'médico', 'rápido', 'lento'];
 
-// Temporary fake predictor to keep UI responsive
+// Temporary fake predictor (replace in Step 4 with real neural network)
 function fakePredictSentiment(text) {
   const t = text.toLowerCase();
   if (!t.trim()) return "Por favor, insira um comentário.";
-
-  if (t.includes("bom") || t.includes("ruim") || t.includes("excelente")) {
+  
+  if (t.includes("bom") || t.includes("excelente") || t.includes("atenciosa")) {
     return "Sentimento previsto: positivo (dummy)";
   }
-  if (t.includes("mau") || t.includes("terrível") || t.includes("péssimo")) {
+  if (t.includes("péssimo") || t.includes("arrogante") || t.includes("demorámos")) {
     return "Sentimento previsto: negativo (dummy)";
   }
   return "Sentimento previsto: neutro (dummy)";
 }
 
-// Test text processing when button clicked
-// Unified button handler - shows both preprocessing info and fake sentiment for now
+// ====== MAIN BUTTON HANDLER ======
 predictBtn.addEventListener("click", () => {
   const text = commentInput.value || "";
-
-  // Show text processing results
+  
+  if (!text.trim()) {
+    resultText.textContent = "Por favor, insira um comentário.";
+    return;
+  }
+  
+  // Process text → vector using REAL vocabulary (or testVocab fallback)
   const cleaned = cleanText(text);
   const tokens = tokenize(text);
-  const vector = textToVector(text, testVocab);
-
+  const vector = textToVector(text, realVocab.length > 0 ? realVocab : testVocab);
+  
+  // Debug info
   console.log('Cleaned:', cleaned);
   console.log('Tokens:', tokens);
-  console.log('Vector:', vector);
-
-  // Show message with fake prediction
+  console.log('Vector length:', vector.length);
+  console.log('Vector sample:', vector.slice(0, 10));
+  
+  // Show results
   const message = fakePredictSentiment(text);
   resultText.innerHTML = `
     ${message}<br>
-    <small>Cleaning: "${cleaned}" → Tokens: [${tokens.join(', ')}] → Vector length: ${vector.length}</small>
+    <small>
+      Cleaned text: "${cleaned}"<br>
+      Tokens extracted: [${tokens.join(', ')}]<br>
+      Vector length (features): ${vector.length}
+    </small>
   `;
 });
+
+// ====== STARTUP ======
+loadTrainingData();  // Load data + build vocab on page load
+console.log("🚀 App ready for Step 3: Prepare Training Data (Pre-Training)");
