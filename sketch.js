@@ -26,7 +26,7 @@ async function loadTrainingData() {
     trainingData = await response.json();
     
     // Build REAL vocabulary from YOUR 18 hospital examples
-    const { buildVocabulary } = await import('../src/text-utils.js');
+    const { buildVocabulary } = await import('../ml/text-utils.js');
     realVocab = buildVocabulary(trainingData);
     
     console.log(`✅ Loaded ${trainingData.length} examples`);
@@ -43,7 +43,7 @@ async function loadTrainingData() {
 }
 
 // ====== TEXT PROCESSING (from Step 2) ======
-const { cleanText, tokenize, textToVector } = await import('../src/text-utils.js');
+const { cleanText, tokenize, textToVector } = await import('../ml/text-utils.js');
 
 // Fallback test vocab (used before real data loads)
 const testVocab = ['bom', 'ruim', 'espera', 'enfermeira', 'médico', 'rápido', 'lento'];
@@ -59,7 +59,7 @@ function fakePredictSentiment(text) {
   if (t.includes("péssimo") || t.includes("arrogante") || t.includes("demorámos")) {
     return "Sentimento previsto: negativo (dummy)";
   }
-  return "Sentimento previsto: neutro (dummy)";
+  return "Sentimento previsto: neutro (regra simples / dummy)";
 }
 
 // ====== MAIN BUTTON HANDLER ======
