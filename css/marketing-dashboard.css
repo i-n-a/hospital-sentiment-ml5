@@ -1,8 +1,6 @@
 /* ADD TO TOP OF YOUR COLLEAGUE'S CSS */
 @import url('../css/style.css');
 
-
-
 :root {
   --bg-soft: #f3f7ff;
   --bg-page: #ffffff;
@@ -171,8 +169,6 @@ button:active {
 .tool-block .helper {
   margin-bottom: 10px;
 }
-
-
 
 /* 🔥 MOBILE */
 @media (max-width: 768px) {
