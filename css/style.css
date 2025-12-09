@@ -1,0 +1,1036 @@
+/* ==========================================================================
+   GLOBAL STYLES - Shared across ALL pages (ML Lab + Marketing Dashboard)
+   ========================================================================== */
+
+/* CSS VARIABLES (GLOBAL) */
+:root {
+  --color-purplish-white: #F3E8FF;
+  --color-light-purple: #CCABD8;
+  --color-dark-purple: #8474A1;
+  --color-light-cyan: #6EC6CA;
+  --color-dark-cyan: #08979D;
+  --color-deep-sea-green: #055B5C;
+  
+  /* Semantic colors */
+  --primary: #3b82f6;
+  --primary-dark: #1d4ed8;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-500: #6b7280;
+  --gray-900: #111827;
+}
+
+/* GLOBAL RESET + TYPOGRAPHY */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  color: var(--gray-900);
+  background: var(--gray-50);
+}
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* GLOBAL NAVIGATION (SHARED) */
+.app-header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.nav-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-link {
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 15px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link:hover {
+  background: var(--gray-100);
+  transform: translateY(-1px);
+}
+
+.nav-link.active {
+  background: var(--primary);
+  color: white;
+}
+
+.nav-marketing { color: var(--primary); }
+.nav-lab { color: var(--danger); }
+
+/* GLOBAL BUTTONS + FORMS */
+.btn-primary, button.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secundary, button.btn-secondary {
+  background: rgb(247, 250, 250);
+  color: var(--gray-900);
+  border: 1px solid var(--gray-900);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--gray-100);
+  transform: translateY(-1px);
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+textarea, input, select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+textarea:focus, input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* GLOBAL CARDS */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+
+/* ==========================================================================
+   ML LAB SPECIFIC STYLES
+   ========================================================================== */
+
+/* Progress Bar */
+/* .progress-bar {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+} */
+
+.progress-step {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-step.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+/* Sentiment Overview Card */
+.sentiment-card {
+  background: var(--gray-50);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.sentiment-bar-container {
+  display: flex;
+  gap: 1rem;
+  height: 50px;
+  margin-bottom: 1rem;
+}
+
+.sentiment-bar {
+  flex: 1;
+  height: 100%;
+  border-radius: 25px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 1rem;
+  font-weight: 600;
+  color: white;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.sentiment-bar .count {
+  font-size: 18px;
+  margin-right: 0.5rem;
+  font-weight: 700;
+}
+
+.sentiment-bar .label {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.sentiment-bar.negative {
+  background: linear-gradient(90deg, var(--danger), #dc2626);
+}
+
+.sentiment-bar.neutral {
+  background: linear-gradient(90deg, var(--warning), #d97706);
+}
+
+.sentiment-bar.positive {
+  background: linear-gradient(90deg, var(--success), #059669);
+}
+
+.total-stats {
+  text-align: center;
+  font-size: 14px;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+/* Data Viewer */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.data-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 1rem 0;
+}
+
+.data-item {
+  padding: 1.25rem;
+  border-radius: 8px;
+  border-left: 4px solid #e5e7eb;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.data-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.data-item.negativo {
+  border-left-color: var(--danger);
+  background: #fef2f2;
+}
+
+.data-item.neutro {
+  border-left-color: var(--warning);
+  background: #fef7d6;
+}
+
+.data-item.positivo {
+  border-left-color: var(--success);
+  background: #ecfdf5;
+}
+
+/* Training Panels */
+.training-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.status-panel, .prediction-panel {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.status-message {
+  font-size: 16px;
+  font-weight: 500;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+  margin: 1rem 0;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+}
+
+.prediction-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: var(--gray-100);
+  border-color: #9ca3af;
+}
+
+#pageInfo {
+  padding: 0.5rem 1rem;
+  background: var(--gray-100);
+  border-radius: 6px;
+  font-weight: 500;
+  min-width: 100px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .training-controls {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  main {
+    padding: 1rem;
+  }
+  
+  .sentiment-bar-container {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .sentiment-bar {
+    min-width: auto;
+    margin-bottom: 0.5rem;
+  }
+  
+  .data-grid {
+    grid-template-columns: 1fr;
+    max-height: 500px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .data-controls {
+    justify-content: center;
+  }
+  
+  .nav-main {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+/* ==========================================================================
+   DARK MODE (FUTURE-PROOF)
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gray-50: #1f2937;
+    --gray-100: #374151;
+  }
+  
+  body {
+    background: var(--gray-900);
+    color: #f9fafb;
+  }
+  
+  .sentiment-card {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .status-panel, .prediction-panel {
+    background: #1f2937;
+    border-color: #374151;
+  }
+}
+
+/* ==========================================================================
+   ML LAB 2.0 - PRIORITY-BASED LAYOUT
+   ========================================================================== */
+
+/* NEW GRID LAYOUT */
+.ml-lab-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* 1. SLIM HEADER */
+.ml-lab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 2rem;
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--gray-100);
+}
+
+.progress-strip {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.progress-step {
+  padding: 0.5rem 0.75rem;
+  font-size: 12px;
+  min-width: 70px;
+}
+
+/* 2. COMPACT SENTIMENT SUMMARY */
+.sentiment-summary {
+  grid-column: 1;
+  background: var(--gray-50);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.sentiment-bars-compact {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.sentiment-bar-compact {
+  flex: 1;
+  height: 36px;
+  border-radius: 18px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.75rem;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  transition: width 0.4s ease;
+  min-width: 80px;
+}
+
+.sentiment-bar-compact span:first-child {
+  font-size: 16px;
+  font-weight: 700;
+  margin-right: 0.25rem;
+}
+
+.sentiment-bar-compact span:last-child {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.stats-line {
+  font-size: 13px;
+  color: var(--gray-500);
+  text-align: center;
+}
+
+/* 3. HERO PREDICTION */
+.prediction-hero {
+  grid-column: 1;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.prediction-hero h2 {
+  margin-top: 0;
+  font-size: 24px;
+}
+
+.prediction-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.confidence-meter {
+  flex: 1;
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+.prediction-result {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: var(--gray-50);
+  border-radius: 12px;
+  border-left: 5px solid var(--primary);
+  font-size: 16px;
+}
+
+/* 4. LIVE TRAINING */
+.training-live {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.live-metrics {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.metric {
+  flex: 1;
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: var(--gray-500);
+  display: block;
+}
+
+/* 5. COLLAPSIBLE DATA */
+.data-explorer {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.section-toggle {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  border-bottom: 1px solid #e5e7eb;
+  background: var(--gray-50);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-toggle h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.toggle-icon {
+  font-size: 20px;
+  transition: transform 0.3s;
+}
+
+.data-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.data-content.open {
+  max-height: 600px;
+}
+
+/* 6. MODEL INSIGHTS */
+.model-insights {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.insight-metrics {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.metric-card {
+  flex: 1;
+  text-align: center;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  display: block;
+  color: var(--primary);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .ml-lab-grid {
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .prediction-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .live-metrics {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* MAIN LAYOUT - NEW GRID */
+.ml-lab-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* 1. COMPACT HEADER */
+.ml-lab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 0;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 2rem;
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.ml-lab-header h1 {
+  margin: 0;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--primary);
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  background: var(--gray-100);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.progress-strip {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.progress-step {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  background: white;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 65px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.progress-step.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* 2. SENTIMENT SUMMARY - COMPACT */
+.sentiment-summary {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.sentiment-bars-compact {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.sentiment-bar-compact {
+  flex: 1;
+  height: 45px;
+  border-radius: 22px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 1rem;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 90px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.sentiment-bar-compact span:first-child {
+  font-size: 20px;
+  font-weight: 800;
+  margin-right: 0.25rem;
+}
+
+.sentiment-bar-compact span:last-child {
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+.sentiment-bar-compact.negative {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.sentiment-bar-compact.neutral {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.sentiment-bar-compact.positive {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.stats-line {
+  font-size: 14px;
+  color: var(--gray-500);
+  text-align: center;
+  font-weight: 500;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* 3. PREDICTION HERO */
+.prediction-hero {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 20px;
+  padding: 2.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.prediction-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
+}
+
+.prediction-hero h2 {
+  margin: 0 0 1.5rem 0;
+  font-size: 26px;
+  color: var(--gray-900);
+}
+
+.prediction-controls {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  align-items: center;
+}
+
+.confidence-meter {
+  flex: 1;
+  height: 10px;
+  background: var(--gray-200);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+  width: 0%;
+  transition: width 0.6s ease;
+}
+
+.prediction-result {
+  margin-top: 2rem;
+  padding: 1.75rem;
+  background: white;
+  border-radius: 16px;
+  border-left: 6px solid var(--primary);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* RESPONSIVE FIXES */
+@media (max-width: 768px) {
+  .ml-lab-grid { gap: 1.25rem; padding: 0 0.5rem; }
+  .sentiment-bars-compact { flex-direction: column; }
+  .sentiment-bar-compact { margin-bottom: 0.5rem; }
+  .prediction-hero { padding: 1.5rem; }
+}
+
+/* 🔥 ADD THESE MODAL STYLES */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); display: flex; align-items: center;
+  justify-content: center; z-index: 1000; opacity: 0; visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active { opacity: 1; visibility: visible; }
+
+.modal-content {
+  background: white; border-radius: 12px; width: 90%; max-width: 600px;
+  max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  transform: scale(0.8); transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content { transform: scale(1); }
+
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px 16px; border-bottom: 1px solid #eee;
+}
+
+.modal-close {
+  background: none; border: none; font-size: 24px; cursor: pointer;
+  color: #666; padding: 0; width: 32px; height: 32px; display: flex;
+  align-items: center; justify-content: center;
+}
+
+.modal-close:hover { color: #000; }
+
+.processor-controls { padding: 16px 24px; border-bottom: 1px solid #eee; }
+.full-width { width: 100%; margin-top: 16px; }
+
+.processor-log {
+  max-height: 200px; overflow-y: auto; padding: 16px 24px;
+  font-family: monospace; font-size: 14px; background: #f8f9fa;
+}
+
+.preview-list {
+  max-height: 200px; overflow-y: auto; padding: 16px 24px;
+}
+
+.preview-list li {
+  padding: 8px; margin: 4px 0; background: #f0f8ff;
+  border-radius: 6px; font-size: 13px; word-break: break-word;
+}
+
+/* 🔥 MAKE BUTTON VISIBLE */
+.data-processor {
+  padding: 20px; margin: 20px 0; background: #f8f9fa;
+  border-radius: 12px; border-left: 4px solid #3b82f6;
+}
+
+#openDataModal {
+  background: #3b82f6; color: white; border: none;
+  padding: 12px 24px; border-radius: 8px; font-size: 16px;
+  cursor: pointer; box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+}
+
+#openDataModal:hover {
+  background: #2563eb; transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59,130,246,0.4);
+}
+
+/* 🔥 TRAINING MODAL - NUCLEAR CLEAN VERSION (REPLACE ALL TRAINING CSS) */
+#trainingModal {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0,0,0,0.95) !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+#trainingModal.active {
+  display: flex !important;
+}
+
+#trainingModal > .training-content {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important;
+  border-radius: 24px !important;
+  width: 90vw !important;
+  max-width: 500px !important;
+  max-height: 90vh !important;
+  color: white !important;
+  padding: 3rem 2rem !important;
+  text-align: center !important;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.8) !important;
+  animation: modalSlideIn 0.4s ease-out !important;
+}
+
+#trainingModal .training-header h3 {
+  margin: 0 0 2rem 0 !important;
+  font-size: 1.8rem !important;
+  font-weight: 800 !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+}
+
+#trainingModal .training-progress .progress-container {
+  width: 100% !important;
+  height: 1.5rem !important;
+  background: rgba(255,255,255,0.2) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  margin: 2rem 0 !important;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+/* 🔥 FORCE PROGRESS BAR VISIBILITY */
+#trainingProgressBar {
+  background: #10b981 !important;
+  background: linear-gradient(90deg, #10b981, #34d399, #059669) !important;
+  height: 100% !important;
+  border-radius: 10px !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+
+#trainingModal .progress-text {
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  margin: 1.5rem 0 !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+
+#trainingModal .training-status {
+  font-size: 1.1rem !important;
+  opacity: 0.95 !important;
+  font-family: 'SF Mono', monospace !important;
+  line-height: 1.5 !important;
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: scale(0.8) translateY(-20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}

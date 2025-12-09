@@ -1,0 +1,13 @@
+Categoria,Total,Percentagem,Descricao,Insight
+Triagem,39,32.5,Comentários sobre a triagem na urgência.,"Muitos doentes relatam tempos de espera longos, pouca empatia e comunicação pouco clara nesta fase inicial."
+Screening,1,0.8,Screening e pré-avaliação.,"Poucos comentários, mas vale monitorizar se o volume aumenta com o tempo."
+Atendimento Hospitalar,15,12.5,Atendimento médico e de enfermagem durante a estadia.,Os comentários focam-se em postura dos profissionais e sensação de falta de humanização.
+Tempo de Espera,11,9.2,"Tempo de espera para atendimento, exames ou resultados.",Reforça a importância da gestão de filas e de atualizar os doentes sobre atrasos.
+Call Center / Contacto,8,6.7,Linha telefónica e contacto remoto.,"Principais temas: dificuldade em contactar, tempos de resposta e falta de informação clara."
+Cobrança / Faturação,4,3.3,"Faturação, pagamentos e transparência de custos.",Comentários sugerem confusão sobre preços e comunicação pouco clara sobre o que é cobrado.
+Administrativo / Gestão,3,2.5,Processos administrativos e organização.,Perceção de burocracia e desorganização em alguns pontos de contacto.
+Exames / TAC / RX,2,1.7,Marcação e realização de exames.,"Volume baixo, mas aparecem queixas sobre tempos de espera e coordenação."
+Condições / Higiene,2,1.7,Instalações físicas e higiene.,Alguns comentários sobre limpeza e condições do espaço físico.
+Negligência / Obstetrícia,1,0.8,Casos de alegada negligência e situações críticas.,"Poucos casos, mas de alto impacto reputacional; exigem análise qualitativa profunda."
+Positivas,2,1.7,Comentários claramente positivos.,"Apesar de serem poucos, reforçam pontos fortes como competência técnica e simpatia de alguns profissionais."
+Outras,32,26.7,Comentário não encaixa nas categorias anteriores.,Pode valer a pena subdividir esta categoria no futuro para obter insights mais específicos.

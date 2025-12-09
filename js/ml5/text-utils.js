@@ -35,17 +35,16 @@ export function buildVocabulary(data) {
 // Convert text to fixed-length vector (bag of words)
 export function textToVector(text, vocabulary) {
   const tokens = tokenize(text);
-  const vector = new Array(vocabulary.length).fill(0);
+  const vector = {};  // ✅ OBJECT not array
   
+  vocabulary.forEach(word => vector[word] = 0);  // ✅ Keys = vocab words
   tokens.forEach(token => {
-    const index = vocabulary.indexOf(token);
-    if (index !== -1) {
-      vector[index] = 1;  // Binary bag-of-words (presence/absence)
-    }
+    if (token in vector) vector[token]++;
   });
   
-  return vector;
+  return vector;  // ✅ Returns { word1: 1, word2: 0, ... }
 }
+
 
 // Get vector length (vocab size)
 export function getVectorSize(vocabulary) {

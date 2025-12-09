@@ -1,0 +1,231 @@
+/* ADD TO TOP OF YOUR COLLEAGUE'S CSS */
+@import url('../css/style.css');
+
+/* OVERRIDE FOR DASHBOARD */
+#dashboard canvas {
+  max-width: 100%;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+:root {
+  --bg-soft: #f3f7ff;
+  --bg-page: #ffffff;
+  --card-bg: #ffffff;
+  --accent: #2563eb;
+  --accent-soft: #e0edff;
+  --accent-strong: #1d4ed8;
+  --border-subtle: #e4e6ee;
+  --text-main: #111827;
+  --text-muted: #6b7280;
+  --radius-lg: 16px;
+  --shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.18);
+  --font-main: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-main);
+  background: radial-gradient(circle at top left, var(--bg-soft), var(--bg-page));
+  color: var(--text-main);
+}
+
+main {
+  max-width: 1200px;
+  margin: 24px auto 48px;
+  padding: 0 24px 32px;
+}
+
+/* DASHBOARD (canvas) */
+
+#dashboard-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 32px auto 80px;  /* top, sides, bottom */
+}
+
+
+#dashboard canvas {
+  display: block;
+  max-width: 100%;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+/* TOOL CARDS */
+
+.tool-card {
+  max-width: 1040px;
+  margin: 0 auto 40px;      /* centered, with a bit of space below */
+  padding: 24px 28px 28px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+}
+
+.tool-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.helper {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+  background: #f9fafb;
+}
+
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+  background: #ffffff;
+}
+
+.tool-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+button {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.4);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.result-text {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.tool-card.tool-card--double {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+/* two columns on wider screens */
+@media (min-width: 900px) {
+  .tool-card.tool-card--double {
+    grid-template-columns: 1.1fr 1fr;
+  }
+}
+
+.tool-block h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* tighten helper text inside tool blocks (reuse existing .helper styles) */
+.tool-block .helper {
+  margin-bottom: 10px;
+}
+
+/* ---- A4 / report layout ---- */
+
+main {
+  max-width: 1200px;
+  margin: 32px auto 64px;
+  padding: 0 24px;
+}
+
+#dashboard {
+  margin-bottom: 40px;   /* extra space before tools */
+}
+
+/* A slightly “A4 card” feeling for the dashboard */
+#dashboard canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+}
+
+/* Print / PDF */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  main {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #dashboard canvas {
+    box-shadow: none;
+    border-radius: 0;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Hide the interactive classification tools */
+  .tool-card {
+    display: none !important;
+  }
+
+  /* Don’t print the export button */
+  #printButton {
+    display: none !important;
+  }
+}
+/* 🔥 WORD CLOUD VISIBILITY FIX */
+#dashboard canvas {
+  max-height: 800px !important;
+  min-height: 700px !important;
+}
+
+/* Ensure word cloud area is visible */
+@media (min-height: 900px) {
+  #dashboard canvas { height: 850px !important; }
+}
+

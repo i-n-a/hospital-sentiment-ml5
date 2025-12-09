@@ -1,28 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
-  <meta charset="UTF-8" />
-  <title>Healthcare Sentiment Analysis (ml5.js)</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Hospital Sentiment Analysis</title>
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="css/marketing-dashboard.css">
   <script src="https://unpkg.com/ml5@1/dist/ml5.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.1/lib/p5.js"></script>
 </head>
 <body>
-    <main>
-      <h1>Análise de Sentimento do Hospital (ml5.js)</h1>
+  <header class="app-header">
+    <nav class="nav-main">
+      <a href="index.html" class="nav-link nav-marketing">📊 Painel de Marketing</a>
+      <a href="ml-lab.html" class="nav-link nav-lab">🔬 Laboratório de ML</a>
+    </nav>
+  </header>
 
-      <section id="input-section">
-        <label for="commentInput">Comentário</label><br />
-        <textarea id="commentInput" rows="4" cols="60" placeholder="Digite um comentário aqui..."></textarea>
-        <br />
-        <button id="predictBtn">Prever sentimento</button>
-      </section>
+  <main>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+        <button id="printButton" class="primary-ghost">
+          Exportar relatório (PDF)
+        </button>
+      </div>
 
-      <section id="result-section">
-        <h2>Resultado</h2>
-        <p id="resultText">Nenhuma previsão ainda.</p>
-      </section>
-  </main>
+      <!-- Canvas lives here -->
+      <div id="dashboard"></div>
 
-  <script type="module" src="sketch.js"></script>
+           <!-- CLASSIFICATION TOOLS: one grouped card -->
+    <section class="tool-card tool-card--double">
+      <div class="tool-block">
+        <h2>Classificar novo comentário</h2>
+        <p class="helper">Cole aqui um comentário em português.</p>
+        <textarea
+          id="inputText"
+          rows="3"
+          placeholder="Cole aqui um comentário em português..."
+        ></textarea>
+        <div class="tool-card__actions">
+          <button id="classifyButton">Classificar</button>
+        </div>
+        <div id="result" class="result-text"></div>
+      </div>
+
+      <div class="tool-block">
+        <h2>Analisar lista de comentários</h2>
+        <p class="helper">Cole vários comentários, um por linha.</p>
+        <textarea
+          id="batchText"
+          rows="4"
+          placeholder="Um comentário por linha…"
+        ></textarea>
+        <div class="tool-card__actions">
+          <button id="batchButton">Classificar lista</button>
+        </div>
+        <div id="batchResult" class="result-text"></div>
+      </div>
+    </section>
+
+    </main>
+  <script src="js/pages/marketing-dashboard.js"></script>
 </body>
 </html>
