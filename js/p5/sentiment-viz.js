@@ -14,19 +14,11 @@ const vizData = {
   filter: 'all'
 };
 
-// ===== MAIN INIT (single entry point) =====
-export function initSentimentViz(trainingData) {
-  console.log('🎨 Initializing visualizations...');
-  
-  vizData.trainingData = trainingData;
-  updateVizData();
-  
-  // Single calls update everything
-  updateHtmlBars();
-  renderDataList();
-  updatePagination();
-  startP5Canvas();
-}
+// ===== FIXED: EXPOSE TO WINDOW IMMEDIATELY =====
+window.setPage = setPage;
+window.setFilter = setFilter;
+window.currentPage = 1;
+window.totalPages = 1;
 
 // ===== CORE DATA PROCESSING =====
 function updateVizData() {
@@ -34,7 +26,6 @@ function updateVizData() {
   vizData.trainingData.forEach(item => vizData.counts[item.label]++);  
   vizData.total = vizData.trainingData.length;
 }
-
 
 // ===== HTML SENTIMENT BARS =====
 function updateHtmlBars() {
@@ -88,30 +79,51 @@ function updatePagination() {
   );
   const totalPages = Math.ceil(filtered.length / vizData.itemsPerPage);
   
-  document.getElementById('pageInfo').textContent = `Page ${vizData.currentPage} of ${totalPages}`;
-  document.getElementById('prevPage').disabled = vizData.currentPage <= 1;
-  document.getElementById('nextPage').disabled = vizData.currentPage >= totalPages;
+  // 🔥 FIXED: Safe numbers only
+  const pageNum = Number.isFinite(vizData.currentPage) ? vizData.currentPage : 1;
+  const totalNum = Number.isFinite(totalPages) ? totalPages : 1;
+  
+  if (document.getElementById('pageInfo')) {
+    document.getElementById('pageInfo').textContent = `Page ${pageNum} of ${totalNum}`;
+  }
+  
+  if (document.getElementById('prevPage')) {
+    document.getElementById('prevPage').disabled = pageNum <= 1;
+  }
+  if (document.getElementById('nextPage')) {
+    document.getElementById('nextPage').disabled = pageNum >= totalNum;
+  }
 }
 
 // ===== PUBLIC API (window globals for event handlers) =====
+// ===== FIXED PAGINATION (handles FILTERING!) =====
 export function setPage(page) {
-  vizData.currentPage = Math.max(1, Math.min(page, Math.ceil(
-    vizData.trainingData.length / vizData.itemsPerPage
-  )));
+  // 🔥 FIXED: Use FILTERED length for total pages
+  const filtered = vizData.trainingData.filter(item => 
+    vizData.filter === 'all' || item.label === vizData.filter
+  );
+  const totalPages = Math.ceil(filtered.length / vizData.itemsPerPage);
+  
+  // 🔥 FIXED: Clamp to real page range
+  vizData.currentPage = Math.max(1, Math.min(page, totalPages));
+  
+  // Expose to window IMMEDIATELY
+  window.currentPage = vizData.currentPage;
+  window.totalPages = totalPages;
+  
   renderDataList();
   updatePagination();
+  console.log(`📄 Page ${vizData.currentPage} of ${totalPages} (${filtered.length} filtered)`);
 }
 
 export function setFilter(filter) {
   vizData.filter = filter;
-  vizData.currentPage = 1;
+  vizData.currentPage = 1;  // Reset to page 1
+  window.currentPage = 1;
   renderDataList();
   updatePagination();
 }
 
-// Expose to window for event handlers
-window.setPage = setPage;
-window.setFilter = setFilter;
 
 // ===== P5.JS CANVAS =====
 function startP5Canvas() {
@@ -153,4 +165,25 @@ function startP5Canvas() {
       }
     };
   });
+}
+
+// ===== MAIN INIT (single entry point) =====
+export function initSentimentViz(trainingData) {
+  console.log('🎨 Initializing visualizations...');
+  
+  vizData.trainingData = trainingData;
+  updateVizData();
+
+  // 🔥 FIXED: Set globals BEFORE any UI wiring
+  window.currentPage = 1;
+  window.totalPages = Math.ceil(trainingData.length / vizData.itemsPerPage);
+  
+  // Expose functions FIRST
+  window.setPage = setPage;
+  window.setFilter = setFilter;
+  
+  updateHtmlBars();
+  renderDataList();
+  updatePagination();
+  startP5Canvas();
 }

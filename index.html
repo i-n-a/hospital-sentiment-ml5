@@ -16,17 +16,19 @@
     </nav>
   </header>
 
-  <main>
-      <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
-        <button id="printButton" class="primary-ghost">
-          Exportar relatório (PDF)
-        </button>
-      </div>
+  <main class="page-shell">
+    <div class="page-header-row">
+      <button id="printButton" class="primary-ghost">
+        Exportar relatório (PDF)
+      </button>
+    </div>
 
-      <!-- Canvas lives here -->
+    <!-- Canvas lives here -->
+    <div id="dashboard-wrapper">
       <div id="dashboard"></div>
-
-           <!-- CLASSIFICATION TOOLS: one grouped card -->
+    </div>
+     
+    <!-- CLASSIFICATION TOOLS: one grouped card -->
     <section class="tool-card tool-card--double">
       <div class="tool-block">
         <h2>Classificar novo comentário</h2>

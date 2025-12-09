@@ -1,5 +1,5 @@
 // =======================
-// MARKETING DASHBOARD - FULL WORKING VERSION
+// MARKETING DASHBOARD 
 // =======================
 
 // p5.js globals (your colleague's original)
@@ -10,6 +10,11 @@ let maxTotal = 0, hoveredIndex = -1, selectedIndex = 0;
 let exportMode = false;
 let chartX, chartY, chartW, chartH, slotH, barH, gapH;
 let panelX, panelY, panelW, panelH, layoutMargin = 70, labelX;
+let chartPaddingTop = 10;
+let chartPaddingBottom = 10;
+let chartPaddingLeft = 10;   // extra space before first bar
+let chartPaddingRight = 10;  // extra space after longest bar
+
 
 // 🔥 NEURAL NET ONLY
 let trainingDataNN, realVocab = [], modelReadyNN = false;
@@ -82,19 +87,40 @@ function setupUI() {
 }
 
 function computeLayout() {
-  labelX = layoutMargin + 80; chartX = labelX + 10;
-  panelW = 230; panelX = width - panelW - layoutMargin; panelY = 170; panelH = height - panelY - layoutMargin;
-  chartY = 190; chartW = panelX - chartX - 40; chartH = height - chartY - layoutMargin - 140;
-  slotH = chartH / categories.length; barH = slotH * 0.6; gapH = slotH * 0.4;
+  // 🔥 RESPONSIVE MARGINS (scale with width)
+  layoutMargin = width > 1000 ? 70 : width > 600 ? 40 : 20;
+  
+  // 🔥 RESPONSIVE PANEL (always 25% right side)
+  panelW = max(width * 0.25, 230);
+  panelX = width - panelW - layoutMargin; 
+  panelY = 170; 
+  panelH = height - panelY - layoutMargin;
+
+  labelX = layoutMargin + 150; 
+  chartX = labelX + 10 + chartPaddingLeft;
+  chartY = 190 + chartPaddingTop;
+  chartW = panelX - chartX - 40 - chartPaddingRight;
+  chartH = height - chartY - layoutMargin - 140 - chartPaddingBottom;
+
+  slotH = chartH / categories.length; 
+  barH = slotH * 0.6; 
+  gapH = slotH * 0.4;
 }
 
+
 function setup() {
-  createCanvas(1100, 850).parent("dashboard");
+  // Dynamic size based on container
+  //let container = select('#dashboard');
+  let maxW = min(windowWidth, 1200);
+  let maxH = min(windowHeight, 900);
+  
+  createCanvas(maxW, maxH).parent("dashboard");
   textFont("system-ui"); 
   textAlign(LEFT, CENTER);
   computeLayout();
-  setupUI();  // 🔥 THIS WAS MISSING!
-  
+  setupUI();  
+
+  console.log(`📐 Canvas: ${width}x${height}`);
   console.log('📊 Table:', table ? table.getRowCount() : 'LOADING');
   console.log('📄 JSON:', trainingDataNN ? trainingDataNN.length : 'LOADING');
   // 🔥 DEBUG loaded state
@@ -102,10 +128,12 @@ function setup() {
   trainingDataNN ? console.log('✅ JSON loaded') : console.log('⏳ JSON loading...');
 }
 
-
-function windowResized() { computeLayout(); }
-
-
+function windowResized() { 
+  let maxW = min(windowWidth, 1200);
+  let maxH = min(windowHeight, 900);
+  resizeCanvas(maxW, maxH);
+  computeLayout(); 
+}
 
 function draw() {
   background(246);
@@ -165,12 +193,11 @@ function draw() {
   drawWordCloud();
 }
 
-
 function drawTitles() {
-  textAlign(LEFT, BASELINE); textStyle(BOLD); fill(20); textSize(24);
+  textAlign(LEFT, BASELINE); textStyle(BOLD); fill(20); textSize(32);
   text("Hospital da Luz – Resumo das Reclamações", layoutMargin, 36);
-  textStyle(NORMAL); textSize(13); fill(90);
-  text("Número de comentários por categoria (n = 120)", layoutMargin, 56);
+  textStyle(NORMAL); textSize(16); fill(90);
+  text("Número de comentários por categoria (n = 120)", layoutMargin, 72);
 }
 
 function drawSentimentOverview() {
@@ -178,8 +205,8 @@ function drawSentimentOverview() {
 
   let margin = layoutMargin;
   let cardX = margin;
-  let cardY = 70;
-  let cardW = panelX - margin - 20;
+  let cardY = 88;
+  let cardW = width - 2 * margin;
   let cardH = 88;
 
   // Card background
@@ -238,11 +265,12 @@ function drawSentimentOverview() {
     textSize(10.5);  // Reset
 }
 
-
 function drawChart() {
-    if (!categories.length) return; // 🔥 SAFETY
-  stroke(0); line(chartX, chartY + chartH, chartX + chartW, chartY + chartH);
-  hoveredIndex = -1; noStroke();
+  if (!categories.length) return; 
+  stroke(0); 
+  line(chartX, chartY + chartH, chartX + chartW, chartY + chartH);
+  hoveredIndex = -1; 
+  noStroke();
   
   for (let i = 0; i < categories.length; i++) {
     let cat = categories[i], y = chartY + gapH / 2 + i * slotH, w = map(cat.total, 0, maxTotal, 0, chartW);
@@ -268,20 +296,35 @@ function drawSidePanel() {
     return;
   }
   
-  noStroke(); fill(255); rect(panelX, panelY, panelW, panelH, 10);
-  stroke(230); noFill(); rect(panelX, panelY, panelW, panelH, 10);
+  noStroke(); fill(255); rect(panelX, panelY+20, panelW, chartH + 40, 10);
+  stroke(230); noFill(); rect(panelX, panelY+20, panelW, chartH + 40, 10);
   
   let indexToShow = hoveredIndex !== -1 ? hoveredIndex : selectedIndex;
   let cat = categories[indexToShow];
   
-  let tx = panelX + 14, ty = panelY + 16;
-  noStroke(); fill(30); textAlign(LEFT, TOP); textSize(13); textStyle(BOLD); text(cat.label, tx, ty);
-  textStyle(NORMAL); ty += 22; textSize(11); fill(70); text(`Total: ${cat.total} (${cat.percent}%)`, tx, ty);
-  ty += 22; fill(50); text("Descrição:", tx, ty); ty += 14; fill(80); text(cat.description, tx, ty, panelW - 28, 90);
-  ty += 90; fill(50); text("Insight para Marketing:", tx, ty); ty += 14; fill(80);
+  let tx = panelX + 24, ty = panelY + 36;
+  noStroke(); fill(30); 
+  textAlign(LEFT, TOP); 
+  textSize(17); 
+  textStyle(BOLD);
+  ty += 24; 
+  text(cat.label, tx, ty);
+  textStyle(NORMAL); ty += 42; fill(70); textSize(15); 
+  textStyle(BOLDITALIC);
+  text(`Total`, tx, ty);
+  ty += 24;
+  textStyle(NORMAL);
+  text(`${cat.total} (${cat.percent}%)`, tx, ty);
+  ty += 42; fill(50); 
+  textStyle(BOLDITALIC);
+  text("Descrição", tx, ty); 
+  textStyle(NORMAL);
+  ty += 24; fill(80); 
+  text(cat.description, tx, ty, panelW - 28, 90);
+  ty += 84; fill(50); textStyle(BOLDITALIC); text("Insight para Marketing", tx, ty);
+  textStyle(NORMAL); ty += 24; fill(80);
   text(cat.insight, tx, ty, panelW - 28, panelH - (ty - panelY) - 16);
 }
-
 
 function drawAllSidePanels() {
   noStroke(); fill(255); rect(panelX, panelY, panelW, panelH, 10);
@@ -312,20 +355,20 @@ function mousePressed() {
 
 function drawWordCloud() {
   if (!importantWords.length) return;
-  let margin = layoutMargin, x = margin, y = chartY + chartH + 40, w = panelX - margin - 20, h = height - y - 40;
+  let margin = layoutMargin, x = margin, y = chartY + chartH + 40, w = width - margin * 2, h = height - y - 40;
   
   noStroke(); fill(252); rect(x, y, w, h, 10); stroke(230); noFill(); rect(x, y, w, h, 10);
-  noStroke(); fill(40); textAlign(LEFT, TOP); textSize(12);
-  text("Palavras mais frequentes em comentários negativos", x + 10, y + 8);
+  noStroke(); fill(40); textAlign(LEFT, TOP); textSize(16);
+  text("Palavras mais frequentes em comentários negativos", x + 14, y + 24);
   
   let maxCount = 1; for (let item of importantWords) if (item.count > maxCount) maxCount = item.count;
-  let cursorX = x + 10, cursorY = y + 30, lineHeight = 0, bottomLimit = y + h - 12;
+  let cursorX = x + 14, cursorY = y + 54, lineHeight = 0, bottomLimit = y + h - 12;
   
   for (let item of importantWords) {
     let size = map(item.count, 1, maxCount, 10, 22); textSize(size);
     let wordWidth = textWidth(item.word) + 18;
     
-    if (cursorX + wordWidth > x + w - 10) { cursorX = x + 10; cursorY += lineHeight + 4; lineHeight = 0; }
+    if (cursorX + wordWidth > x + w - 10) { cursorX = x + 14; cursorY += lineHeight + 5; lineHeight = 0; }
     if (cursorY + size > bottomLimit) break;
     
     let t = item.count / maxCount;

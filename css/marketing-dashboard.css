@@ -1,12 +1,7 @@
 /* ADD TO TOP OF YOUR COLLEAGUE'S CSS */
 @import url('../css/style.css');
 
-/* OVERRIDE FOR DASHBOARD */
-#dashboard canvas {
-  max-width: 100%;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
-}
+
 
 :root {
   --bg-soft: #f3f7ff;
@@ -38,34 +33,48 @@ body {
   color: var(--text-main);
 }
 
-main {
+.page-shell {
   max-width: 1200px;
-  margin: 24px auto 48px;
+  margin: 32px auto 64px;
   padding: 0 24px 32px;
+}
+
+.page-header-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
 }
 
 /* DASHBOARD (canvas) */
 
-#dashboard-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 32px auto 80px;  /* top, sides, bottom */
-}
+/* A slightly “A4 card” feeling for the dashboard */
 
+#dashboard-wrapper {
+  width: 100%;
+  max-width: 1200px;  /* Never wider than main */
+  margin: 0 auto 40px;  /* Center + space below */
+  padding: 0;      /* Side padding on mobile */
+}
 
 #dashboard canvas {
-  display: block;
-  max-width: 100%;
+  width: 100% !important;
+  height: auto !important;
+  max-height: auto;     /* Fit viewport */
+  min-height: 650px;    /* Minimum for word cloud */
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
+  display: block;
+  padding: 42px;
+  background:rgb(245,245,245);
 }
+
 
 /* TOOL CARDS */
 
 .tool-card {
-  max-width: 1040px;
-  margin: 0 auto 40px;      /* centered, with a bit of space below */
-  padding: 24px 28px 28px;
+  max-width: 1200px;    /* Same as wrapper */
+  margin: 0 auto 40px;
+  padding: 24px;
   background: #ffffff;
   border-radius: 18px;
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
@@ -163,27 +172,37 @@ button:active {
   margin-bottom: 10px;
 }
 
-/* ---- A4 / report layout ---- */
 
-main {
-  max-width: 1200px;
-  margin: 32px auto 64px;
-  padding: 0 24px;
+
+/* 🔥 MOBILE */
+@media (max-width: 768px) {
+  main {
+    padding: 0 16px;
+  }
+  
+  #dashboard-wrapper {
+    padding: 0 8px;
+  }
+  
+  .tool-card--double {
+    grid-template-columns: 1fr !important;  /* Single column */
+    gap: 20px;
+  }
+  
+  #dashboard canvas {
+    min-height: 550px !important;  /* Smaller on mobile */
+  }
 }
 
-#dashboard {
-  margin-bottom: 40px;   /* extra space before tools */
+/* 🔥 TABLET */
+@media (min-width: 769px) and (max-width: 1100px) {
+  #dashboard canvas {
+    min-height: 700px !important;
+  }
 }
 
-/* A slightly “A4 card” feeling for the dashboard */
-#dashboard canvas {
-  width: 100%;
-  height: auto;
-  border-radius: 16px;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
-}
+/* 🔥 PRINT - Full width */
 
-/* Print / PDF */
 @page {
   size: A4;
   margin: 12mm;
@@ -199,13 +218,15 @@ main {
     margin: 0;
     padding: 0;
   }
-
+  #dashboard-wrapper {
+    max-width: none;
+    padding: 0;
+  }
+  
   #dashboard canvas {
-    box-shadow: none;
-    border-radius: 0;
-    max-width: 100%;
-    width: 100%;
-    height: auto;
+    max-height: none !important;
+    min-height: auto !important;
+    height: 100vh !important;
   }
 
   /* Hide the interactive classification tools */
@@ -218,14 +239,15 @@ main {
     display: none !important;
   }
 }
+
+
 /* 🔥 WORD CLOUD VISIBILITY FIX */
-#dashboard canvas {
+/* #dashboard canvas {
   max-height: 800px !important;
   min-height: 700px !important;
-}
+} */
 
 /* Ensure word cloud area is visible */
-@media (min-height: 900px) {
+/* @media (min-height: 900px) {
   #dashboard canvas { height: 850px !important; }
-}
-
+} */
