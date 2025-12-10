@@ -222,11 +222,26 @@ function wireDataControls() {
 function wireModelControls() {
   document.getElementById('saveModelBtn')?.addEventListener('click', async () => {
     if (!modelTrained || !nn) return alert('Train model first!');
-    await saveModel(nn, 'sentiment-model');
+    await saveModel(nn, 'sentiment-model'); // local download
   });
 
   document.getElementById('saveDataBtn')?.addEventListener('click', () => {
-    saveTrainingData(trainingData, 'hospital-sentiment.json');
+    saveTrainingData(trainingData, 'hospital-sentiment.json'); // local download
+  });
+
+  // NEW: publish to dashboard
+  document.getElementById('publishModelBtn')?.addEventListener('click', async () => {
+    if (!modelTrained || !nn) return alert('Train model first!');
+
+    // 1) Save model to a shared path used by the dashboard
+    await saveModel(nn, 'models/hospital-sentiment-latest');
+
+    // 2) Save vocab alongside it so dashboard can vectorize text the same way
+    await saveTrainingData(
+      realVocab.map(token => ({ token })),     // simple JSON structure
+      'models/hospital-sentiment-vocab'
+    );
+    alert('📡 Model and vocab published to Marketing Dashboard!');
   });
 }
 
