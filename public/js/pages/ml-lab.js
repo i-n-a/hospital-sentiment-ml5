@@ -64,7 +64,7 @@ async function loadTrainingData() {
     trainingData = window.cleanedTrainingData;
     console.log(`📥 Using custom CSV: ${trainingData.length} examples`);
   } else {
-    const response = await fetch('../data/hospital-da-luz-277-sentiment.json');
+    const response = await fetch('./data/sample-sentiment.json');
     trainingData = await response.json();
     console.log(`📥 Using sample data: ${trainingData.length} examples`);
   }
@@ -234,12 +234,12 @@ function wireModelControls() {
     if (!modelTrained || !nn) return alert('Train model first!');
 
     // 1) Save model to a shared path used by the dashboard
-    await saveModel(nn, 'models/hospital-sentiment-latest');
+    await saveModel(nn, 'model/hospital-sentiment-latest');
 
     // 2) Save vocab alongside it so dashboard can vectorize text the same way
     await saveTrainingData(
       realVocab.map(token => ({ token })),     // simple JSON structure
-      'models/hospital-sentiment-vocab'
+      'model/hospital-sentiment-vocab'
     );
     alert('📡 Model and vocab published to Marketing Dashboard!');
   });

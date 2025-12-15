@@ -50,3 +50,7 @@ export function textToVector(text, vocabulary) {
 export function getVectorSize(vocabulary) {
   return vocabulary.length;
 }
+
+// After the function definitions
+window.cleanText = cleanText;
+window.textToVector = textToVector;

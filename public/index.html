@@ -3,21 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <title>Hospital Sentiment Analysis</title>
-  <link rel="stylesheet" href="../css/reset.css">
-  <link rel="stylesheet" href="css/marketing-dashboard.css">
+  <link rel="stylesheet" href="./css/reset.css">
+  <link rel="stylesheet" href="./css/marketing-dashboard.css">
   <script src="https://unpkg.com/ml5@1/dist/ml5.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/p5@1.11.1/lib/p5.js"></script>
 </head>
 <body>
   <header class="app-header">
     <nav class="nav-main">
-      <a href="index.html" class="nav-link nav-marketing">📊 Painel de Marketing</a>
-      <a href="ml-lab.html" class="nav-link nav-lab">🔬 Laboratório de ML</a>
+      <a href="./index.html" class="nav-link nav-marketing">📊 Painel de Marketing</a>
+      <a href="./ml-lab.html" class="nav-link nav-lab">🔬 Laboratório de ML</a>
     </nav>
   </header>
 
   <main class="page-shell">
+    <section class="tool-card">
+      <div class="tool-block">
+        <h2>Carregar CSV de comentários</h2>
+        <p class="helper">
+          Ficheiro CSV com colunas <code>sentiment</code>, <code>comentário</code> e <code>classificacao</code>.
+          Só a coluna de comentário é usada para a predição.
+        </p>
+
+        <input type="file" id="csvUpload" accept=".csv" />
+
+        <div class="tool-card__actions">
+          <button id="processCsvButton">Classificar CSV</button>
+        </div>
+
+        <div id="csvSummary" class="result-text"></div>
+        <div id="csvTable" class="result-table"></div>
+      </div>
+    </section>
+
     <div class="page-header-row">
+      
       <button id="printButton" class="primary-ghost">
         Exportar relatório (PDF)
       </button>
@@ -60,6 +80,8 @@
     </section>
 
     </main>
-  <script src="js/pages/marketing-dashboard.js"></script>
+
+  <script type="module" src="./js/ml5/text-utils.js"></script>
+  <script type="module" src="./js/pages/marketing-dashboard.js"></script>
 </body>
 </html>

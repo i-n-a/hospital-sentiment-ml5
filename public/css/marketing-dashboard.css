@@ -247,3 +247,21 @@ button:active {
 /* @media (min-height: 900px) {
   #dashboard canvas { height: 850px !important; }
 } */
+
+.result-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid #eee;
+  padding: 0.35rem 0.5rem;
+  vertical-align: top;
+}
+
+.sent-neg { background: #ffe5e5; }
+.sent-neu { background: #f3f3f3; }
+.sent-pos { background: #e4f7ec; }

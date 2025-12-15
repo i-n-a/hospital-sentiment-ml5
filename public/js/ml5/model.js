@@ -2,15 +2,16 @@
  * ML5 Neural Network Core - COMPLETE (NO DUPLICATES)
  */
 export async function setupBackend() {
-  try {
-    await ml5.tf.setBackend('webgl');
-    await ml5.tf.ready();
-    console.log('✅ WebGL backend initialized');
-  } catch (e) {
-    await ml5.tf.setBackend('cpu');
-    await ml5.tf.ready();
-    console.log('✅ CPU backend fallback');
-  }
+  // try {
+  //   await ml5.tf.setBackend('webgl');
+  //   await ml5.tf.ready();
+  //   console.log('✅ WebGL backend initialized');
+  // } catch (e) {
+  //   await ml5.tf.setBackend('cpu');
+  //   await ml5.tf.ready();
+  //   console.log('✅ CPU backend fallback');
+  // }
+  ml5.setBackend('cpu' || 'webgl');
 }
 
 export async function createNeuralNetwork(vocabSize) {
@@ -44,7 +45,7 @@ export async function predictSentiment(nn, textVector) {
 
 export async function saveModel(nn, filename = 'sentiment-model') {
   try {
-    await nn.save(`downloads://${filename}`);
+    await nn.save(`${filename}`);
     console.log(`💾 Model saved: ${filename}`);
   } catch (error) {
     console.error('Save failed:', error);

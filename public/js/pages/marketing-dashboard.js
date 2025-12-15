@@ -2,6 +2,8 @@
 // MARKETING DASHBOARD 
 // =======================
 
+import { cleanText, textToVector } from './../ml5/text-utils.js';
+const sketch = (p) => {
 // p5.js globals (your colleague's original)
 let table, categories = [];
 let sentimentSummary = { negative: 0, positive: 0, neutral: 0 };
@@ -20,6 +22,12 @@ let chartPaddingRight = 10;  // extra space after longest bar
 let trainingDataNN, realVocab = [], modelReadyNN = false;
 let importantWords = [];
 let dataInitialized = false;  // 🔥 NEW FLAG
+let sentimentModel = null;
+let modelReady = false;
+//let realVocab = [];
+let classifier;
+let dataReady = false;
+let sentimentComputed = false;  // new flag
 
 // Stopwords (your colleague's original)
 const cloudStopwords = new Set([
@@ -29,9 +37,16 @@ const cloudStopwords = new Set([
   "hospital", "hospitais", "consulta", "consultas", "medico", "médico", "médica", "paciente", "pacientes", "luz"
 ]);
 
-function preload() {
-  table = loadTable("data/csv/resumo_categorias.csv", "csv", "header");
-  trainingDataNN = loadJSON("data/hospital-da-luz-277-sentiment.json");
+p.preload= function() {
+  console.log('🚀 Loading sentiment model and vocab...');
+  loadSentimentResources(); // start loading model + vocab
+  table = p.loadTable("data/csv/resumo_categorias.csv", "csv", "header");
+  trainingDataNN = []; // initialize
+  p.loadJSON("data/sample-sentiment.json", (loadedData) => {
+    trainingDataNN = loadedData;  // assign it manually
+    dataReady = true;
+    console.log('✅ trainingDataNN loaded, length:', trainingDataNN.length);
+  });
 }
 
 function tokenize(txt) {
@@ -41,13 +56,13 @@ function tokenize(txt) {
 }
 
 function setupUI() {
-  let printBtn = select("#printButton");
+  let printBtn = p.select("#printButton");
   if (printBtn) printBtn.mousePressed(() => { exportMode = true; window.print(); });
 
   window.addEventListener("beforeprint", () => exportMode = true);
   window.addEventListener("afterprint", () => exportMode = false);
 
-  let classifyBtn = select("#classifyButton"), inputText = select("#inputText"), resultDiv = select("#result");
+  let classifyBtn = p.select("#classifyButton"), inputText = p.select("#inputText"), resultDiv = p.select("#result");
   if (classifyBtn && inputText && resultDiv) {
     // Single comment - Neural Net
     classifyBtn.mousePressed(async () => {
@@ -59,7 +74,7 @@ function setupUI() {
     });
   }
 
-  let batchBtn = select("#batchButton"), batchInput = select("#batchText"), batchResult = select("#batchResult");
+  let batchBtn = p.select("#batchButton"), batchInput = p.select("#batchText"), batchResult = p.select("#batchResult");
   if (batchBtn && batchInput && batchResult) {
     // Batch - Neural Net  
     batchBtn.mousePressed(async () => {
@@ -84,43 +99,175 @@ function setupUI() {
       batchResult.html(html);
     });
   }
+    // CSV upload + classification (marketing dashboard)
+  const csvInput = p.select('#csvUpload');
+  const csvButton = p.select('#processCsvButton');
+  const csvSummaryDiv = p.select('#csvSummary');
+  const csvTableDiv = p.select('#csvTable');
+
+  // Keep last results if you later want export
+  let lastCsvRows = [];
+
+  if (csvInput && csvButton && csvSummaryDiv && csvTableDiv) {
+    csvButton.mousePressed(async () => {
+      console.log('🚀 CSV BUTTON CLICKED');
+      
+      const file = csvInput.elt.files?.[0];
+      if (!file) {
+        csvSummaryDiv.html('Selecione primeiro um ficheiro CSV.');
+        return;
+      }
+      console.log('📁 File selected:', file.name, file.size, 'bytes');
+
+      if (!modelReady) {
+        csvSummaryDiv.html('Modelo a carregar...');
+        return;
+      }
+
+      try {
+      const text = await file.text();
+      console.log('📄 File text length:', text.length);
+      
+      const rows = parseMarketingCsv(text);
+      console.log('✅ ROWS PARSED:', rows.length);
+      
+      if (!rows.length) {
+        csvSummaryDiv.html('Nenhum comentário válido encontrado.');
+        return;
+      }
+
+      let neg = 0, neu = 0, pos = 0;
+      const classifiedRows = [];
+
+      // 🔥 Batch classify (reuse your classifyText - it does cleanText)
+      for (const row of rows) {
+        const res = await classifyText(row.rawComment);
+        if (!res) continue;
+
+        if (res.label === 'negativo') neg++;
+        else if (res.label === 'neutro') neu++;
+        else pos++;
+
+        classifiedRows.push({
+          comment: row.rawComment,
+          predicted: res.label,
+          confidence: res.confidence
+        });
+      }
+
+      const total = neg + neu + pos;
+      sentimentSummary = { negative: neg, neutral: neu, positive: pos };
+      sentimentTotal = total;
+
+      // Summary + table (same as before)
+      csvSummaryDiv.html(`
+        <strong>Total:</strong> ${total}<br>
+        Negativo: ${neg} (${(neg/total*100).toFixed(1)}%)<br>
+        Neutro: ${neu} (${(neu/total*100).toFixed(1)}%)<br>
+        Positivo: ${pos} (${(pos/total*100).toFixed(1)}%)
+      `);
+
+      // Color-coded table
+      let html = '<table><thead><tr><th>Comentário</th><th>Predição</th><th>Confiança</th></tr></thead><tbody>';
+      classifiedRows.slice(0, 50).forEach(r => {  // Limit to 50 for UI
+        const cls = r.predicted === 'negativo' ? 'sent-neg' : 
+                    r.predicted === 'positivo' ? 'sent-pos' : 'sent-neu';
+        html += `<tr class="${cls}"><td>${r.comment.substring(0,100)}...</td><td>${r.predicted}</td><td>${r.confidence}%</td></tr>`;
+      });
+      html += '</tbody></table>';
+      csvTableDiv.html(html);
+    } catch (err) {
+      console.error('❌ CSV processing error:', err);
+      csvSummaryDiv.html('Erro ao processar o ficheiro CSV.');
+    }
+    });
+  
+  }
+
 }
 
 function computeLayout() {
   // 🔥 RESPONSIVE MARGINS (scale with width)
-  layoutMargin = width > 1000 ? 70 : width > 600 ? 40 : 20;
+  layoutMargin = p.width > 1000 ? 70 : p.width > 600 ? 40 : 20;
   
   // 🔥 RESPONSIVE PANEL (always 25% right side)
-  panelW = max(width * 0.25, 230);
-  panelX = width - panelW - layoutMargin; 
+  panelW = p.max(p.width * 0.25, 230);
+  panelX = p.width - panelW - layoutMargin; 
   panelY = 170; 
-  panelH = height - panelY - layoutMargin;
+  panelH = p.height - panelY - layoutMargin;
 
   labelX = layoutMargin + 150; 
   chartX = labelX + 10 + chartPaddingLeft;
   chartY = 190 + chartPaddingTop;
   chartW = panelX - chartX - 40 - chartPaddingRight;
-  chartH = height - chartY - layoutMargin - 140 - chartPaddingBottom;
+  chartH = p.height - chartY - layoutMargin - 140 - chartPaddingBottom;
 
   slotH = chartH / categories.length; 
   barH = slotH * 0.6; 
   gapH = slotH * 0.4;
 }
 
+function modelLoaded() {
+  console.log('✅ Sentiment model loaded');
+  sentimentModel = classifier;
+  modelReady = true;
+}
 
-function setup() {
+async function loadSentimentResources() {
+  try {
+    //   try {
+    //   await ml5.tf.setBackend('webgl');
+    //   await ml5.tf.ready();
+    //   console.log('✅ WebGL backend initialized');
+    // } catch (e) {
+    //   await ml5.tf.setBackend('cpu');
+    //   await ml5.tf.ready();
+    //   console.log('✅ CPU backend fallback');
+    // }
+    ml5.setBackend('cpu' || 'webgl');
+    // 1) Load vocab
+    const vocabRes = await fetch('models/hospital-sentiment-latest/vocab/model_hospital-sentiment-vocab.json');
+    if (vocabRes.ok) {
+      const vocabJson = await vocabRes.json();
+      realVocab = vocabJson.map(d => d.token || d);
+      console.log('✅ Vocab loaded:', realVocab.length);
+    } else {
+      console.warn('⚠️ Vocab file not found');
+    }
+
+    let classifierOptions = {
+      task: "classification",
+    };
+    classifier = ml5.neuralNetwork(classifierOptions);
+
+    let modelDetails = {
+      model: "models/hospital-sentiment-latest/model/model_hospital-sentiment-latest.json",
+      metadata: "models/hospital-sentiment-latest/model/model_hospital-sentiment-latest_meta.json",
+      weights: "models/hospital-sentiment-latest/model/model_hospital-sentiment-latest.weights.bin",
+    };
+
+    classifier.load(modelDetails, modelLoaded);
+
+  } catch (err) {
+    console.error('❌ Failed to load model/vocab:', err);
+    modelReady = false;
+  }
+}
+
+p.setup = function() {
   // Dynamic size based on container
   //let container = select('#dashboard');
-  let maxW = min(windowWidth, 1200);
-  let maxH = min(windowHeight, 900);
+  let maxW = p.min(p.windowWidth, 1200);
+  let maxH = p.min(p.windowHeight, 900);
   
-  createCanvas(maxW, maxH).parent("dashboard");
-  textFont("system-ui"); 
-  textAlign(LEFT, CENTER);
+  p.createCanvas(maxW, maxH).parent("dashboard");
+  p.textFont("system-ui"); 
+  p.textAlign(p.LEFT, p.CENTER);
   computeLayout();
   setupUI();  
 
-  console.log(`📐 Canvas: ${width}x${height}`);
+
+  console.log(`📐 Canvas: ${p.width}x${p.height}`);
   console.log('📊 Table:', table ? table.getRowCount() : 'LOADING');
   console.log('📄 JSON:', trainingDataNN ? trainingDataNN.length : 'LOADING');
   // 🔥 DEBUG loaded state
@@ -128,76 +275,119 @@ function setup() {
   trainingDataNN ? console.log('✅ JSON loaded') : console.log('⏳ JSON loading...');
 }
 
-function windowResized() { 
-  let maxW = min(windowWidth, 1200);
-  let maxH = min(windowHeight, 900);
-  resizeCanvas(maxW, maxH);
+p.windowResized = function() { 
+  let maxW = p.min(p.windowWidth, 1200);
+  let maxH = p.min(p.windowHeight, 900);
+  p.resizeCanvas(maxW, maxH);
   computeLayout(); 
 }
 
-function draw() {
-  background(246);
+async function recomputeSentimentFromModel() {
+  console.log('🔎 recompute check:', {
+    modelReady, hasModel: !!sentimentModel, vocabSize: realVocab.length,
+    dataReady, isArray: Array.isArray(trainingDataNN), len: trainingDataNN?.length
+  });
+
+  if (!modelReady || !sentimentModel || !realVocab.length || !dataReady || !Array.isArray(trainingDataNN)) {
+    console.warn('Model or data not ready');
+    return;
+  }
+
+  const allData = trainingDataNN.filter(item => item?.text?.trim());
+  console.log(`🤖 Classifying ALL ${allData.length} texts (batched)`);
+
+  let neg = 0, pos = 0, neu = 0, total = 0;
   
-  // 🔥 ONE-TIME INIT (not every frame!)
+  // 🔥 BATCH PROCESSING: 32 texts at a time (optimal for CPU)
+  const BATCH_SIZE = 32;
+  const batches = [];
+  
+  for (let i = 0; i < allData.length; i += BATCH_SIZE) {
+    batches.push(allData.slice(i, i + BATCH_SIZE));
+  }
+
+  console.log(`📦 ${batches.length} batches of ${BATCH_SIZE}`);
+
+  // 🔥 PROCESS BATCHES SEQUENTIALLY (non-blocking draw)
+  for (let batchNum = 0; batchNum < batches.length; batchNum++) {
+    const batch = batches[batchNum];
+    console.log(`🔄 Batch ${batchNum + 1}/${batches.length} (${batch.length} texts)`);
+    
+    // Process batch in parallel within batch
+    const batchPromises = batch.map(async (item) => {
+      const text = item.text.trim();
+      const res = await classifyText(text);
+      if (!res || res.label === '?') return null;
+      
+      return res.label.toLowerCase();
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    const validResults = batchResults.filter(r => r);
+    
+    // Count this batch
+    validResults.forEach(label => {
+      if (label === 'negativo') neg++;
+      else if (label === 'positivo') pos++;
+      else if (label === 'neutro') neu++;
+    });
+    
+    total += validResults.length;
+    
+    // 🔥 PROGRESS UPDATE every batch (keeps UI responsive)
+    if (total > 0) {
+      sentimentSummary = { negative: neg, positive: pos, neutral: neu };
+      sentimentTotal = total;
+      console.log(`📊 Progress: ${total}/${allData.length} (${Math.round(total/allData.length*100)}%)`, sentimentSummary);
+    }
+  }
+
+  console.log('🎉 FINAL:', sentimentSummary, `n = ${total}/${allData.length}`);
+  generateNeuralNetWordCloud();
+}
+
+p.draw = function() {
+  p.background(246);
+
+  // ONE-TIME INIT
   if (!dataInitialized && table && table.getRowCount() > 0) {
     console.log('🎉 INITIALIZING DATA (ONCE!)');
-    
-    // Load categories (fast)
+
     for (let r = 0; r < table.getRowCount(); r++) {
       let total = table.getNum(r, "Total");
       categories.push({
-        label: table.getString(r, "Categoria"), total, 
+        label: table.getString(r, "Categoria"),
+        total,
         percent: table.getNum(r, "Percentagem"),
-        description: table.getString(r, "Descricao"), 
+        description: table.getString(r, "Descricao"),
         insight: table.getString(r, "Insight")
       });
       if (total > maxTotal) maxTotal = total;
     }
 
-    // 🔥 FAST JSON CONVERSION (no tokenizing here!)
-    let jsonData = [];
-    if (trainingDataNN) {
-      for (let i = 0; i < 1000; i++) {  // Bigger limit
-        if (trainingDataNN[i]) jsonData.push(trainingDataNN[i]);
-        else break;
-      }
-    }
-    
-    if (jsonData.length > 0) {
-      // 🔥 COUNT LABELS FAST (no tokenizing)
-      let neg = 0, pos = 0, neu = 0;
-      for (let item of jsonData) {
-        let label = item?.label?.toLowerCase();
-        if (label === 'negativo') neg++;
-        else if (label === 'positivo') pos++;
-        else if (label === 'neutro') neu++;
-      }
-      sentimentSummary = { negative: neg, positive: pos, neutral: neu };
-      sentimentTotal = jsonData.length;
-      trainingDataNN = jsonData;
-      
-      // 🔥 WORD CLOUD → ONE-TIME (heavy work)
-      generateNeuralNetWordCloud();
-    }
-    
     computeLayout();
-    dataInitialized = true;  // 🔥 NEVER AGAIN!
-    console.log('✅ INIT DONE:', categories.length, 'reviews:', sentimentTotal);
+    dataInitialized = true;
+    console.log('✅ INIT DONE:', categories.length);
   }
-  
-  // 🔥 LIGHT DRAW (60 FPS smooth!)
-  drawTitles(); 
-  drawSentimentOverview(); 
-  drawChart(); 
-  drawSidePanel(); 
+
+  // When both model + data are ready, compute sentiment ONCE
+  if (!sentimentComputed && modelReady && dataReady && Array.isArray(trainingDataNN)) {
+    sentimentComputed = true;
+    recomputeSentimentFromModel();
+  }
+
+  drawTitles();
+  drawSentimentOverview();
+  drawChart();
+  drawSidePanel();
   drawWordCloud();
 }
 
 function drawTitles() {
-  textAlign(LEFT, BASELINE); textStyle(BOLD); fill(20); textSize(32);
-  text("Hospital da Luz – Resumo das Reclamações", layoutMargin, 36);
-  textStyle(NORMAL); textSize(16); fill(90);
-  text("Número de comentários por categoria (n = 120)", layoutMargin, 72);
+  p.textAlign(p.LEFT, p.BASELINE); p.textStyle(p.BOLD); p.fill(20); p.textSize(32);
+  p.text("Hospital da Luz – Resumo das Reclamações", layoutMargin, 36);
+  p.textStyle(p.NORMAL); p.textSize(16); p.fill(90);
+  p.text("Número de comentários por categoria (n = 120)", layoutMargin, 72);
 }
 
 function drawSentimentOverview() {
@@ -206,12 +396,12 @@ function drawSentimentOverview() {
   let margin = layoutMargin;
   let cardX = margin;
   let cardY = 88;
-  let cardW = width - 2 * margin;
+  let cardW = p.width - 2 * margin;
   let cardH = 88;
 
   // Card background
-  noStroke(); fill(252); rect(cardX, cardY, cardW, cardH, 10);
-  stroke(230); noFill(); rect(cardX, cardY, cardW, cardH, 10);
+  p.noStroke(); p.fill(252); p.rect(cardX, cardY, cardW, cardH, 10);
+  p.stroke(230); p.noFill(); p.rect(cardX, cardY, cardW, cardH, 10);
 
   // Inner bar container
   let x = cardX + 14;
@@ -219,30 +409,30 @@ function drawSentimentOverview() {
   let w = cardW - 28;
   let h = 16;
 
-  noFill(); stroke(210); rect(x, y, w, h, 8);
+  p.noFill(); p.stroke(210); p.rect(x, y, w, h, 8);
 
   let negW = (sentimentSummary.negative / sentimentTotal) * w;
   let neuW = (sentimentSummary.neutral / sentimentTotal) * w;
   let posW = (sentimentSummary.positive / sentimentTotal) * w;
 
-  noStroke();
+  p.noStroke();
   
   // 🔥 NEGATIVE: round LEFT corners only
-  fill(230, 80, 80);
-  rect(x, y, negW, h, 8, 0, 0, 8);
+  p.fill(230, 80, 80);
+  p.rect(x, y, negW, h, 8, 0, 0, 8);
   
   // 🔥 NEUTRO: RECTANGLE (NO rounded corners)
-  fill(200);
-  rect(x + negW, y, neuW, h, 0, 0, 0, 0);
+  p.fill(200);
+  p.rect(x + negW, y, neuW, h, 0, 0, 0, 0);
   
   // 🔥 POSITIVE: round RIGHT corners only  
-  fill(80, 180, 120);
-  rect(x + negW + neuW, y, posW, h, 0, 8, 8, 0);
+  p.fill(80, 180, 120);
+  p.rect(x + negW + neuW, y, posW, h, 0, 8, 8, 0);
 
   // 🔥 DYNAMIC LABELS - CLAMPED TO CONTAINER!
-    fill(40);
-    textAlign(LEFT, TOP);
-    textSize(10.5);
+    p.fill(40);
+    p.textAlign(p.LEFT, p.TOP);
+    p.textSize(10.5);
     let labelY = y + h + 6;
 
     // 🔥 RIGHT BOUNDARY = end of white rect
@@ -250,38 +440,37 @@ function drawSentimentOverview() {
 
     // Negativo: LEFT edge (always safe)
     let negX = x + 2;
-    text(`Negativo: ${sentimentSummary.negative} (${(sentimentSummary.negative / sentimentTotal * 100).toFixed(1)}%)`, negX, labelY);
+    p.text(`Negativo: ${sentimentSummary.negative} (${(sentimentSummary.negative / sentimentTotal * 100).toFixed(1)}%)`, negX, labelY);
 
     // Neutro: LEFT edge of gray (clamp if needed)
     let neuX = Math.min(x + negW + 2, rightBoundary - 120);  // 120px min width
-    text(`Neutro: ${sentimentSummary.neutral} (${(sentimentSummary.neutral / sentimentTotal * 100).toFixed(1)}%)`, neuX, labelY);
-
+    p.text(`Neutro: ${sentimentSummary.neutral} (${(sentimentSummary.neutral / sentimentTotal * 100).toFixed(1)}%)`, neuX, labelY);
     // Positivo: LEFT edge of green (clamp + shrink if tiny)
     let posX = Math.min(x + negW + neuW + 2, rightBoundary - 80);  // 80px min width
     let posTextSize = 10.5;
     if (posX > rightBoundary - 100) posTextSize = 9;  // Shrink tiny bars
-    textSize(posTextSize);
-    text(`Positivo: ${sentimentSummary.positive} (${(sentimentSummary.positive / sentimentTotal * 100).toFixed(1)}%)`, posX, labelY);
-    textSize(10.5);  // Reset
+    p.textSize(posTextSize);
+    p.text(`Positivo: ${sentimentSummary.positive} (${(sentimentSummary.positive / sentimentTotal * 100).toFixed(1)}%)`, posX, labelY);
+    p.textSize(10.5);  // Reset
 }
 
 function drawChart() {
   if (!categories.length) return; 
-  stroke(0); 
-  line(chartX, chartY + chartH, chartX + chartW, chartY + chartH);
+  p.stroke(0); 
+  p.line(chartX, chartY + chartH, chartX + chartW, chartY + chartH);
   hoveredIndex = -1; 
-  noStroke();
+  p.noStroke();
   
   for (let i = 0; i < categories.length; i++) {
-    let cat = categories[i], y = chartY + gapH / 2 + i * slotH, w = map(cat.total, 0, maxTotal, 0, chartW);
-    let isHovered = mouseX >= chartX && mouseX <= chartX + w && mouseY >= y && mouseY <= y + barH;
+    let cat = categories[i], y = chartY + gapH / 2 + i * slotH, w = p.map(cat.total, 0, maxTotal, 0, chartW);
+    let isHovered = p.mouseX >= chartX && p.mouseX <= chartX + w && p.mouseY >= y && p.mouseY <= y + barH;
     if (isHovered) hoveredIndex = i;
     
-    fill(i === selectedIndex ? [40, 110, 255] : isHovered ? [100, 160, 255] : [80, 130, 255]);
-    rect(chartX, y, w, barH);
+    p.fill(i === selectedIndex ? [40, 110, 255] : isHovered ? [100, 160, 255] : [80, 130, 255]);
+    p.rect(chartX, y, w, barH);
     
-    fill(0); textSize(12); textAlign(RIGHT, CENTER); text(cat.label, labelX, y + barH / 2);
-    textSize(11); textAlign(LEFT, CENTER); text(cat.total, chartX + w + 5, y + barH / 2);
+    p.fill(0); p.textSize(12); p.textAlign(p.RIGHT, p.CENTER); p.text(cat.label, labelX, y + barH / 2);
+    p.textSize(11); p.textAlign(p.LEFT, p.CENTER); p.text(cat.total, chartX + w + 5, y + barH / 2);
   }
 }
 
@@ -290,40 +479,40 @@ function drawSidePanel() {
   
   // 🔥 SAFETY CHECK - No crash if categories empty
   if (!categories.length || categories.length === 0) {
-    noStroke(); fill(255); rect(panelX, panelY, panelW, panelH, 10);
-    stroke(230); noFill(); rect(panelX, panelY, panelW, panelH, 10);
-    fill(100); textAlign(LEFT, TOP); textSize(13); text("Carregando dados...", panelX + 14, panelY + 30);
+    p.noStroke(); p.fill(255); p.rect(panelX, panelY, panelW, panelH, 10);
+    p.stroke(230); p.noFill(); p.rect(panelX, panelY, panelW, panelH, 10);
+    p.fill(100); p.textAlign(p.LEFT, p.TOP); p.textSize(13); p.text("Carregando dados...", panelX + 14, panelY + 30);
     return;
   }
   
-  noStroke(); fill(255); rect(panelX, panelY+20, panelW, chartH + 40, 10);
-  stroke(230); noFill(); rect(panelX, panelY+20, panelW, chartH + 40, 10);
+  p.noStroke(); p.fill(255); p.rect(panelX, panelY+20, panelW, chartH + 40, 10);
+  p.stroke(230); p.noFill(); p.rect(panelX, panelY+20, panelW, chartH + 40, 10);
   
   let indexToShow = hoveredIndex !== -1 ? hoveredIndex : selectedIndex;
   let cat = categories[indexToShow];
   
   let tx = panelX + 24, ty = panelY + 36;
-  noStroke(); fill(30); 
-  textAlign(LEFT, TOP); 
-  textSize(17); 
-  textStyle(BOLD);
+  p.noStroke(); p.fill(30); 
+  p.textAlign(p.LEFT, p.TOP); 
+  p.textSize(17); 
+  p.textStyle(p.BOLD);
   ty += 24; 
-  text(cat.label, tx, ty);
-  textStyle(NORMAL); ty += 42; fill(70); textSize(15); 
-  textStyle(BOLDITALIC);
-  text(`Total`, tx, ty);
+  p.text(cat.label, tx, ty);
+  p.textStyle(p.NORMAL); ty += 42; p.fill(70); p.textSize(15); 
+  p.textStyle(p.BOLDITALIC);
+  p.text(`Total`, tx, ty);
   ty += 24;
-  textStyle(NORMAL);
-  text(`${cat.total} (${cat.percent}%)`, tx, ty);
-  ty += 42; fill(50); 
-  textStyle(BOLDITALIC);
-  text("Descrição", tx, ty); 
-  textStyle(NORMAL);
-  ty += 24; fill(80); 
-  text(cat.description, tx, ty, panelW - 28, 90);
-  ty += 84; fill(50); textStyle(BOLDITALIC); text("Insight para Marketing", tx, ty);
-  textStyle(NORMAL); ty += 24; fill(80);
-  text(cat.insight, tx, ty, panelW - 28, panelH - (ty - panelY) - 16);
+  p.textStyle(p.NORMAL);
+  p.text(`${cat.total} (${cat.percent}%)`, tx, ty);
+  ty += 42; p.fill(50); 
+  p.textStyle(p.BOLDITALIC);
+  p.text("Descrição", tx, ty); 
+  p.textStyle(p.NORMAL);
+  ty += 24; p.fill(80); 
+  p.text(cat.description, tx, ty, panelW - 28, 90);
+  ty += 84; p.fill(50); p.textStyle(p.BOLDITALIC); p.text("Insight para Marketing", tx, ty);
+  p.textStyle(p.NORMAL); ty += 24; p.fill(80);
+  p.text(cat.insight, tx, ty, panelW - 28, panelH - (ty - panelY) - 16);
 }
 
 function drawAllSidePanels() {
@@ -344,10 +533,10 @@ function drawAllSidePanels() {
   }
 }
 
-function mousePressed() {
+p.mousePressed = function() {
   for (let i = 0; i < categories.length; i++) {
-    let y = chartY + gapH / 2 + i * slotH, w = map(categories[i].total, 0, maxTotal, 0, chartW);
-    if (mouseX >= chartX && mouseX <= chartX + w && mouseY >= y && mouseY <= y + barH) {
+    let y = chartY + gapH / 2 + i * slotH, w = p.map(categories[i].total, 0, maxTotal, 0, chartW);
+    if (p.mouseX >= chartX && p.mouseX <= chartX + w && p.mouseY >= y && p.mouseY <= y + barH) {
       selectedIndex = i; break;
     }
   }
@@ -355,25 +544,25 @@ function mousePressed() {
 
 function drawWordCloud() {
   if (!importantWords.length) return;
-  let margin = layoutMargin, x = margin, y = chartY + chartH + 40, w = width - margin * 2, h = height - y - 40;
+  let margin = layoutMargin, x = margin, y = chartY + chartH + 40, w = p.width - margin * 2, h = p.height - y - 40;
   
-  noStroke(); fill(252); rect(x, y, w, h, 10); stroke(230); noFill(); rect(x, y, w, h, 10);
-  noStroke(); fill(40); textAlign(LEFT, TOP); textSize(16);
-  text("Palavras mais frequentes em comentários negativos", x + 14, y + 24);
+  p.noStroke(); p.fill(252); p.rect(x, y, w, h, 10); p.stroke(230); p.noFill(); p.rect(x, y, w, h, 10);
+  p.noStroke(); p.fill(40); p.textAlign(p.LEFT, p.TOP); p.textSize(16);
+  p.text("Palavras mais frequentes em comentários negativos", x + 14, y + 24);
   
   let maxCount = 1; for (let item of importantWords) if (item.count > maxCount) maxCount = item.count;
   let cursorX = x + 14, cursorY = y + 54, lineHeight = 0, bottomLimit = y + h - 12;
   
   for (let item of importantWords) {
-    let size = map(item.count, 1, maxCount, 10, 22); textSize(size);
-    let wordWidth = textWidth(item.word) + 18;
+    let size = p.map(item.count, 1, maxCount, 10, 22); p.textSize(size);
+    let wordWidth = p.textWidth(item.word) + 18;
     
     if (cursorX + wordWidth > x + w - 10) { cursorX = x + 14; cursorY += lineHeight + 5; lineHeight = 0; }
     if (cursorY + size > bottomLimit) break;
     
     let t = item.count / maxCount;
-    fill(lerpColor(color("#999"), color("#e25c5c"), t * 0.9));
-    text(item.word, cursorX, cursorY); cursorX += wordWidth;
+    p.fill(p.lerpColor(p.color("#999"), p.color("#e25c5c"), t * 0.9));
+    p.text(item.word, cursorX, cursorY); cursorX += wordWidth;
     if (size > lineHeight) lineHeight = size;
   }
 }
@@ -404,17 +593,143 @@ function generateNeuralNetWordCloud() {
   console.log('☁️ NN Words:', importantWords.length);
   console.log('Top:', importantWords.slice(0, 3));
 }
+
+// async function classifyText(inputText) {
+//   // 🔥 PURE NEURAL NET - Mock ML5 result
+//   if (inputText?.trim()) {
+//     const mockNN = {
+//       negativo: Math.random() * 0.4,
+//       neutro: Math.random() * 0.3,
+//       positivo: Math.random() * 0.3
+//     };
+//     const maxLabel = Object.keys(mockNN).reduce((a, b) => mockNN[a] > mockNN[b] ? a : b);
+//     const confidence = (Math.max(...Object.values(mockNN)) * 100).toFixed(1);
+//     return { label: maxLabel, confidence };
+//   }
+//   return { label: "?", confidence: 0 };
+// }
+
+// async function classifyText(inputText) {
+//   const text = inputText?.trim();
+//   if (!text) return null;
+
+//   if (!modelReady || !sentimentModel || !realVocab.length) {
+//     return { label: "?", confidence: 0 };
+//   }
+
+//   // Use same preprocessing as ML Lab
+//   const cleaned = cleanText(text);
+//   const inputVector = textToVector(cleaned, realVocab);
+
+//   return new Promise(resolve => {
+//     sentimentModel.classify(inputVector, (err, results) => {
+//       if (err || !results || !results[0]) {
+//         console.error(err || 'No results');
+//         resolve({ label: "?", confidence: 0 });
+//         return;
+//       }
+//       const top = results[0];
+//       resolve({
+//         label: top.label,
+//         confidence: (top.confidence * 100).toFixed(1)
+//       });
+//     });
+//   });
+// }
+// }
+
 async function classifyText(inputText) {
-  // 🔥 PURE NEURAL NET - Mock ML5 result
-  if (inputText?.trim()) {
-    const mockNN = {
-      negativo: Math.random() * 0.4,
-      neutro: Math.random() * 0.3,
-      positivo: Math.random() * 0.3
-    };
-    const maxLabel = Object.keys(mockNN).reduce((a, b) => mockNN[a] > mockNN[b] ? a : b);
-    const confidence = (Math.max(...Object.values(mockNN)) * 100).toFixed(1);
-    return { label: maxLabel, confidence };
+  const text = inputText?.trim();
+  if (!text) return null;
+
+  if (!modelReady || !sentimentModel || !realVocab.length) {
+    return { label: "?", confidence: 0 };
   }
-  return { label: "?", confidence: 0 };
+
+  const cleaned = cleanText(text);
+  const inputVector = textToVector(cleaned, realVocab);
+
+  try {
+    // 🔥 EXACT SAME as your WORKING model.js predictSentiment()
+    const results = await sentimentModel.classify(inputVector);
+    const top = results[0];
+    
+    console.log('📈 classify results:', results);
+    
+    return { 
+      label: top.label, 
+      confidence: (top.confidence * 100).toFixed(1) 
+    };
+  } catch (err) {
+    console.error('Classification error:', err);
+    return null;
+  }
 }
+
+// csv upload handler
+function splitCsvIntoRecords(raw) {
+  const records = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      current += ch;
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (current.trim() !== '') records.push(current);
+      current = '';
+      // Optional: swallow \r\n pairs
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim() !== '') records.push(current);
+  return records;
+}
+
+function parseMarketingCsv(raw) {
+  const records = splitCsvIntoRecords(raw);   // true CSV rows
+  console.log('Records:', records.length);    // should be 201
+
+  const rows = [];
+  for (let i = 1; i < records.length; i++) {  // skip header
+    const cols = parseCsvLine(records[i]);
+    if (!cols.length) continue;
+
+    const comment = cols[0].replace(/^"|"$/g, '').trim();
+    if (comment.length > 2) {
+      rows.push({ rawComment: comment });
+    }
+  }
+  console.log('Parsed comments:', rows.length);
+  return rows;
+}
+
+
+function parseCsvLine(line) {
+  const columns = [];
+  let col = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      columns.push(col);
+      col = '';
+    } else {
+      col += char;
+    }
+  }
+  columns.push(col);
+  return columns;
+}
+
+
+}
+
+new p5(sketch);
