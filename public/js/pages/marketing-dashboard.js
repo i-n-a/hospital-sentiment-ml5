@@ -9,7 +9,7 @@ const sketch = (p) => {
   let table, categories = [];
   let sentimentSummary = { negative: 0, positive: 0, neutral: 0 };
   let sentimentTotal = 0;
-  let maxTotal = 0, hoveredIndex = -1, selectedIndex = -1;  
+  let maxTotal = 0, hoveredIndex = -1, selectedIndex = -1, exportMode = false;
   let chartX, chartY, chartW, chartH, slotH, barH, gapH;
   let panelX, panelY, panelW, panelH, layoutMargin = 70, labelX;
   let chartPaddingTop = 10;
@@ -305,6 +305,7 @@ const sketch = (p) => {
   }
 
   function setupUI() {
+    exportMode = false;  // Reset on UI init
     let printBtn = p.select("#printButton");
     if (printBtn) printBtn.mousePressed(() => { exportMode = true; window.print(); });
 
