@@ -23,70 +23,27 @@
         <div class="status-badge" id="globalStatus">Loading...</div>
       </div>
       <div class="progress-strip">
-        <div class="progress-step active" data-step="1">📥 Data</div>
-        <div class="progress-step" data-step="2">🧠 Model</div>
-        <div class="progress-step" data-step="3">🚀 Train</div>
-        <div class="progress-step" data-step="4">🎯 Ready</div>
+        <div class="progress-step active" data-step="1">Data</div>
+        <div class="progress-step" data-step="2">Model</div>
+        <div class="progress-step" data-step="3">Train</div>
+        <div class="progress-step" data-step="4">Ready</div>
       </div>
     </header>
 
-        <!-- DATA PROCESSOR (MISSING!) -->
-    <section class="data-processor">
-      <h3>🔄 Process New Dataset</h3>
-      <button id="openDataModal" class="btn-secondary">📁 Upload New Dataset</button>
-    </section>
-
-    <!-- DATA PROCESSOR MODAL -->
-    <div class="modal-overlay" id="dataModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>🔄 Process New Dataset</h3>
-          <button class="modal-close" id="closeModal">×</button>
-        </div>
-        
-        <div class="processor-controls">
-          <input type="file" id="fileInput" accept=".txt,.csv">
-          <label><input type="checkbox" id="removeShort" checked> Remove short tokens</label>
-          <button id="processBtn" class="btn-primary" disabled>Process Data</button>
-          <button id="downloadBtn" class="btn-secondary" disabled>Download JSON</button>
-        </div>
-        
-        <div id="log" class="processor-log"></div>
-        <div id="previewList" class="preview-list"></div>
-        
-        <button id="trainNewDatasetBtn" class="btn-primary full-width" disabled>🚀 Train New Model</button>
-      </div>
-    </div>
-
-    <!-- 🔥 TRAINING LOADER MODAL -->
-    <div class="training-overlay" id="trainingModal">
-      <div class="training-content">
-        <div class="training-header">
-          <h3>🚀 Training Neural Network</h3>
-        </div>
-        <div class="training-progress">
-          <div class="progress-container">
-            <div class="progress-bar" id="trainingProgressBar"></div>
-          </div>
-          <div class="progress-text" id="trainingProgressText">0/320 Epochs</div>
-        </div>
-        <div class="training-status" id="trainingStatusText">Initializing model...</div>
-      </div>
-    </div>
-
-
-    <!-- MODEL CONTROLS (MISSING!) -->
-    <section class="model-controls">
-      <h3>💾 Model Management</h3>
-      <div class="control-buttons">
-        <button id="saveModelBtn" class="btn-primary" disabled>💾 Save Trained Model</button>
-        <button id="saveDataBtn" class="btn-secondary">💾 Save Trained Data</button>
-        <button id="publishModelBtn">📡 Publish Model To Marketing Dashboard</button>
-      </div>
-    </section>
-    
-
     <div class="ml-lab-grid">
+      <!-- DATA PROCESSOR (MISSING!) -->
+      <section class="data-processor">
+        <h3>🔄 Process New Dataset</h3>
+        <button id="openDataModal" class="btn-secondary">Upload New Dataset</button>
+      </section>
+      <!-- MODEL CONTROLS (MISSING!) -->
+      <section class="model-controls">
+        <h3>💾 Model Management</h3>
+        <div class="control-buttons">
+          <button id="saveModelBtn" class="btn-primary">💾 Save Trained Model</button> 
+          <button id="saveDataBtn" class="btn-secondary">💾 Save Trained Data in Json</button>
+        </div>
+      </section>
       <!-- 2. SENTIMENT SUMMARY (Slim card) -->
       <section class="sentiment-summary">
         <h3>📊 Data Overview</h3>
@@ -107,42 +64,12 @@
         </div>
       </section>
 
-      <!-- 3. TEST PREDICTION (Hero section - ABOVE FOLD) -->
-      <section class="prediction-hero">
-        <h2>🧪 Test Prediction</h2>
-        <textarea id="commentInput" rows="4" 
-                  placeholder="Type a hospital comment to test the model... (e.g. 'Péssimo atendimento na urgência')"></textarea>
-        <div class="prediction-controls">
-          <button id="predictBtn" class="btn-primary" disabled>Predict Sentiment</button>
-          <div class="confidence-meter" id="confidenceMeter"></div>
-        </div>
-        <div id="resultText" class="prediction-result"></div>
-      </section>
 
-      <!-- 4. TRAINING STATUS (Live feedback) -->
-      <section class="training-live">
-        <h3>⚡ Training Status</h3>
-        <div id="modelStatus" class="status-message large">Initializing...</div>
-        <div class="live-metrics">
-          <div class="metric">
-            <span class="metric-label">Epoch</span>
-            <span id="currentEpoch">-</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Loss</span>
-            <span id="currentLoss">-</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Status</span>
-            <span id="trainingStatus">-</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5. DATA EXPLORER (Collapsible below fold) -->
+      <!-- 3. DATA EXPLORER (Collapsible below fold) -->
       <section class="data-explorer">
         <div class="section-toggle">
-          <h3>📋 Training Data <span class="toggle-icon">-</span></h3>
+          <h3>📋 Training Data </h3>
+          <span class="toggle-icon">-</span>
         </div>
         <div class="data-content open"> 
         <div class="data-header">
@@ -164,11 +91,44 @@
         </div>
       </section>
 
+      <!-- 4. TEST PREDICTION (Hero section - ABOVE FOLD) -->
+      <section class="prediction-hero">
+        <h3>🧪 Test Prediction</h3>
+        <textarea id="commentInput" rows="4" 
+                  placeholder="Type a hospital comment to test the model... (e.g. 'Péssimo atendimento na urgência')"></textarea>
+        <div class="prediction-controls">
+          <button id="predictBtn" class="btn-primary" disabled>Predict Sentiment</button>
+          <div class="confidence-meter" id="confidenceMeter"></div>
+        </div>
+        <div id="resultText" class="prediction-result"></div>
+      </section>
+
+      <!-- 5. TRAINING STATUS (Live feedback) -->
+      <section class="training-live hidden">
+        <h3>⚡ Training Status</h3>
+        <div id="modelStatus" class="status-message large">Initializing...</div>
+        <div class="live-metrics">
+          <div class="metric">
+            <span class="metric-label">Epoch</span>
+            <span id="currentEpoch">-</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Loss</span>
+            <span id="currentLoss">-</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Status</span>
+            <span id="trainingStatus">-</span>
+          </div>
+        </div>
+      </section>
+
+
       <!-- 6. MODEL INSIGHTS (Learning curves + confusion matrix) -->
       <section class="model-insights">
         <h3>📈 Model Learning</h3>
         <div id="ml-viz"></div>
-        <div class="insight-metrics">
+        <div class="insight-metrics hidden">
           <div class="metric-card">
             <span class="metric-value" id="finalLoss">-</span>
             <span class="metric-label">Final Loss</span>
@@ -180,6 +140,46 @@
         </div>
       </section>
     </div>
+
+    <!-- DATA PROCESSOR MODAL -->
+    <div class="modal-overlay" id="dataModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Process New Dataset</h3>
+          <button class="modal-close" id="closeModal">×</button>
+        </div>
+        
+        <div class="processor-controls">
+          <p>Please provide a csv file with first column sentiment and second column comentario to process and train a new model with ml5NeuralNetwork.</p>
+          <input type="file" id="fileInput" accept=".txt,.csv">
+          <label><input type="checkbox" id="removeShort" checked> Remove short tokens</label>
+          <button id="processBtn" class="btn-primary" disabled>Process Data</button>
+          <button id="downloadBtn" class="btn-secondary" disabled>Download JSON</button>
+        </div>
+        
+        <div id="log" class="processor-log"></div>
+        <div id="previewList" class="preview-list"></div>
+        
+        <button id="trainNewDatasetBtn" class="btn-primary full-width" disabled> Train New Model</button>
+      </div>
+    </div>
+
+    <!-- 🔥 TRAINING LOADER MODAL -->
+    <div class="training-overlay" id="trainingModal">
+      <div class="training-content">
+        <div class="training-header">
+          <h3>Training Neural Network</h3>
+        </div>
+        <div class="training-progress">
+          <div class="progress-container">
+            <div class="progress-bar" id="trainingProgressBar"></div>
+          </div>
+          <div class="progress-text" id="trainingProgressText">0/320 Epochs</div>
+        </div>
+        <div class="training-status" id="trainingStatusText">Initializing model...</div>
+      </div>
+    </div>
+
   </main>
 
   <script type="module" src="js/ml5/data-processor.js"></script>

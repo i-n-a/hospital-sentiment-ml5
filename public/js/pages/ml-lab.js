@@ -1,7 +1,8 @@
 /**
  * ML Lab Main - Neural Network Training Orchestrator (ENTERPRISE EDITION)
- * Features: CSV Modal → Training Loader → Live Progress → Perfect UX
+ * Features: Trained Model on Load - CSV Modal → Training Loader → Live Progress → Perfect UX
  */
+
 import { 
   buildVocabulary, textToVector, cleanText, tokenize 
 } from '../ml5/text-utils.js';
@@ -16,7 +17,12 @@ import { initDataProcessor } from '../ml5/data-processor.js';
 let trainingData = [];
 let realVocab = [];
 let nn = null;
+let classifier = null;  
 let modelTrained = false;
+let modelVocab = []; 
+let vizInitialized = false;
+let isTrainingMode = false;
+let finalLossValue = null;  
 
 // ===== UI ELEMENTS =====
 let commentInput, predictBtn, resultText, modelStatus, globalStatus;
@@ -54,7 +60,6 @@ function updateTrainingProgress(epoch, totalEpochs = 320, status = '') {
   if (statusText) statusText.textContent = status;
 }
 
-
 // ===== STEP 1: Load + Preprocess Data =====
 async function loadTrainingData() {
   console.log('📥 Loading training data...');
@@ -64,13 +69,17 @@ async function loadTrainingData() {
     trainingData = window.cleanedTrainingData;
     console.log(`📥 Using custom CSV: ${trainingData.length} examples`);
   } else {
-    const response = await fetch('./data/sample-sentiment.json');
+    const response = await fetch('./data/hospital-sentiment-data-latest-trained-model.json');
     trainingData = await response.json();
     console.log(`📥 Using sample data: ${trainingData.length} examples`);
   }
   
   realVocab = buildVocabulary(trainingData);
-  initSentimentViz(trainingData);
+  // ✅ Only init once
+  if (!vizInitialized) {
+    initSentimentViz(trainingData);
+    vizInitialized = true;
+  }
   wireDataControls();
   
   document.getElementById('total-examples').textContent = trainingData.length;
@@ -83,9 +92,10 @@ async function loadTrainingData() {
 
 // ===== STEP 2-3: Model Pipeline + TRAINING MODAL =====
 async function setupAndTrainModel() {
+  isTrainingMode = true;
+  document.querySelector('#predictBtn').disabled = true;  // DISABLE
   showTrainingModal('🧠 Creating neural network...');
   updateProgress(2);
-  
   nn = await createNeuralNetwork(realVocab.length);
   updateTrainingProgress(0, 320, '📦 Adding training data...');
   
@@ -100,9 +110,11 @@ async function setupAndTrainModel() {
   trainNeuralNetwork(nn, 320,
     (epoch, logs) => {
       const loss = logs.loss.toFixed(4);
+      finalLossValue = loss;   // 🔥 keep latest loss
+
       updateTrainingProgress(epoch, 320, `Epoch ${epoch}: loss ${loss}`);
       updateGlobalStatus(`Training... ${epoch}/320`);
-      // Update main UI metrics too
+
       const epochEl = document.getElementById('currentEpoch');
       const lossEl = document.getElementById('currentLoss');
       const statusEl = document.getElementById('trainingStatus');
@@ -113,25 +125,36 @@ async function setupAndTrainModel() {
     },
     () => {
       modelTrained = true;
+      isTrainingMode = false;
+      document.querySelector('#predictBtn').disabled = false;
+
       updateProgress(4);
       updateTrainingProgress(320, 320, '✅ Training complete!');
-      
-      setTimeout(() => {
-        // 🔥 CLOSE BOTH MODALS TOGETHER
+
+      setTimeout(async () => {
         hideTrainingModal();
         document.getElementById('dataModal')?.classList.remove('active');
-        updateGlobalStatus('✅ Ready for predictions!'); 
+        updateGlobalStatus('✅ Ready for predictions!');
         if (modelStatus) modelStatus.innerHTML = '✅ <strong>Model trained successfully!</strong>';
-        if (predictBtn) predictBtn.disabled = false;
+        showTrainingUI();
+        document.getElementById('predictBtn').disabled = false;
         document.getElementById('saveModelBtn').disabled = false;
         resetDatasetProcessor();
         if (resultText) resultText.innerHTML += '<br>🎯 Ready for predictions!';
-        
-        document.getElementById('finalLoss').textContent = '0.1234';
-        document.getElementById('accuracy').textContent = '94.2%';
+
+        // 🔥 REAL FINAL LOSS
+        const finalLossEl = document.getElementById('finalLoss');
+        if (finalLossEl) finalLossEl.textContent = finalLossValue ?? '-';
+
+        // 🔥 REAL TEST ACCURACY
+        const testAccuracy = await calculateTestAccuracy();
+        const accEl = document.getElementById('accuracy');
+        if (accEl) accEl.textContent = testAccuracy !== null ? `${testAccuracy.toFixed(1)}%` : '-';
       }, 1500);
+
     }
   );
+
 }
 
 // ===== RETRAIN WITH NEW CSV DATA =====
@@ -140,8 +163,12 @@ async function retrainWithNewData() {
     console.log('🔄 Retraining with new CSV data...');
     trainingData = window.cleanedTrainingData;
     realVocab = buildVocabulary(trainingData);
-    initSentimentViz(trainingData);
-    await setupAndTrainModel(); // Modal handles everything
+    modelVocab = [];  // Clear old vocab
+    
+    // 🔥 UPDATE viz instead of re-init
+    window.updateSentimentViz(trainingData);
+    
+    await setupAndTrainModel();
   }
 }
 
@@ -151,52 +178,84 @@ function setupPredictionUI() {
     let retries = 0;
     const check = () => {
       const elements = ids.map(id => document.getElementById(id));
-      if (elements.every(el => el) || retries++ > 10) resolve(elements);
-      else setTimeout(check, 100);
+      if (elements.every(el => el) || retries++ > 30) {  
+        resolve(elements);
+      } else {
+        setTimeout(check, 200);  
+      }
     };
     check();
   });
 
   waitForElements(['commentInput', 'predictBtn', 'resultText', 'modelStatus', 'globalStatus']).then(
     ([cInput, pBtn, rText, mStatus, gStatus]) => {
-      commentInput = cInput; predictBtn = pBtn; resultText = rText; 
-      modelStatus = mStatus; globalStatus = gStatus;
-      predictBtn.addEventListener('click', handlePrediction);
-      console.log('✅ UI elements ready');
+      commentInput = cInput; 
+      predictBtn = pBtn;      
+      resultText = rText; 
+      modelStatus = mStatus; 
+      globalStatus = gStatus;
+      
+      if (predictBtn) {
+        predictBtn.addEventListener('click', handlePrediction);
+        predictBtn.disabled = modelTrained;  // Enable if trained
+        console.log('✅ UI elements ready + predictBtn enabled');
+      }
     }
   );
 }
 
 async function handlePrediction() {
-  const text = commentInput.value.trim();
-  if (!text) { 
-    resultText.textContent = 'Please enter a comment.'; 
-    return; 
-  }
-  if (!modelTrained) { 
-    resultText.textContent = 'Wait for training...'; 
-    return; 
+  const text = commentInput?.value?.trim();
+  if (!text) {
+    resultText && (resultText.textContent = 'Digite um comentário.');
+    return;
   }
   
-  modelStatus.textContent = '🔮 Predicting...';
-  const inputVector = textToVector(text, realVocab);
-  const prediction = await predictSentiment(nn, inputVector);
+  if (!modelTrained) {
+    resultText && (resultText.textContent = 'Treinando...');
+    return;
+  }
   
-  const confidence = (prediction.confidence * 100).toFixed(1);
-  document.querySelector('.confidence-fill')?.style.setProperty('width', `${confidence}%`);
+  console.log('🔍 PREDICT:', { nn: !!nn, classifier: !!classifier, vocabLen: (modelVocab || realVocab)?.length });
+  modelStatus && (modelStatus.textContent = '🔮 Prevendo...');
   
-  const cleaned = cleanText(text);
-  const tokens = tokenize(text);
+  const vocab = realVocab;  // ← SIMPLIFIED - always current vocab!
+  const inputVector = textToVector(text, vocab);
   
-  resultText.innerHTML = `
-    🎯 <strong>${prediction.label.toUpperCase()}</strong> 
-    (${confidence}%)<br><br>
-    <details><summary>🔧 Technical Details</summary>
-      Cleaned: "${cleaned}"<br>
-      Tokens: [${tokens.join(', ')}]<br>
-      Vocab: ${realVocab.length}
-    </details>
-  `;
+  // 🔥 PRIORITY 1: Trained nn (overrides loaded model)
+  if (nn) {
+    try {
+      const prediction = await predictSentiment(nn, inputVector);
+      resultText.innerHTML = `
+        🎯 <strong>${prediction.label.toUpperCase()}</strong> 
+        (${(prediction.confidence * 100).toFixed(1)}%)
+        <br><small>🆕 Treinado</small>
+      `;
+      return;
+    } catch (e) {
+      console.error('nn predict failed:', e);
+    }
+  }
+  
+  // 🔥 PRIORITY 2: Loaded classifier (initial load)
+  if (classifier) {
+    classifier.classify(inputVector, (error, predictions) => {
+      console.log('Classifier results:', { error, predictions });
+      const results = error || predictions || [];
+      if (results.length > 0) {
+        const best = results[0];
+        resultText.innerHTML = `
+          🎯 <strong>${best.label?.toUpperCase()}</strong> 
+          (${(best.confidence * 100)?.toFixed(1)}%)
+        `;
+      } else {
+        resultText.textContent = 'Sem predições';
+      }
+    });
+    return;
+  }
+  
+  resultText.textContent = 'Nenhum modelo disponível';
 }
 
 // ===== DATA CONTROLS =====
@@ -270,6 +329,36 @@ function updateGlobalStatus(message) {
   document.getElementById('globalStatus').textContent = message;
 }
 
+function showTrainingUI() {
+  document.querySelector('.training-live').classList.remove('hidden');
+  document.querySelector('.insight-metrics').classList.remove('hidden');
+}
+
+// 🔥 Calculate test accuracy on 20% held-out data
+async function calculateTestAccuracy() {
+  if (!trainingData.length || !nn) return null;
+  
+  try {
+    // Split: 80% train, 20% test (simple random split)
+    const testData = trainingData.slice(-Math.floor(trainingData.length * 0.2));
+    
+    let correct = 0;
+    for (const item of testData) {
+      const inputVector = textToVector(item.text, realVocab);
+      const prediction = await predictSentiment(nn, inputVector);
+      if (prediction.label === item.label) correct++;
+    }
+    
+    const accuracy = (correct / testData.length) * 100;
+    console.log(`✅ Test accuracy: ${accuracy.toFixed(1)}% (${correct}/${testData.length})`);
+    return accuracy;
+  } catch (error) {
+    console.error('Test accuracy failed:', error);
+    return null;
+  }
+}
+
+
 // ===== RESET DATASET PROCESSOR (After Training) =====
 function resetDatasetProcessor() {
   const trainBtn = document.getElementById('trainNewDatasetBtn');
@@ -282,13 +371,22 @@ function resetDatasetProcessor() {
     trainBtn.textContent = '🚀 Train New Model';
     trainBtn.disabled = false;
   }
-  if (processBtn) processBtn.disabled = false;
+  
   if (fileInput) fileInput.value = '';
   if (logEl) logEl.textContent = '✅ Model trained! Ready for new dataset.';
   if (previewList) previewList.innerHTML = '';
   
   console.log('🔄 Dataset processor reset - ready for new data');
 }
+
+// 🔥 Add this helper function (before init())
+function updateSentimentViz(newData) {
+  if (window.updateSentimentVizImpl) {
+    window.updateSentimentVizImpl(newData);
+  }
+}
+window.updateSentimentViz = updateSentimentViz;
+
 
 // ===== MAIN INIT =====
 async function init() {
@@ -300,19 +398,54 @@ async function init() {
     else resolve();
   });
   
-  // 🔥 INIT ORDER
   setupPredictionUI();
   updateGlobalStatus('Initializing...');  
   initDataProcessor();
   wireModelControls();
   wireModalControls();
   
-  if (window.tf?.disposeVariables) window.tf.disposeVariables();
-  
   window.addEventListener('newTrainingDataReady', retrainWithNewData);
   
   await loadTrainingData();
-  await setupAndTrainModel();
+  
+  // 🔥 LOAD MODEL (AFTER vocab ready)
+  loadDashboardModel();  // 🔥 Fixed - no param needed
+}
+
+async function loadDashboardModel() {
+  try {
+    // 🔥 Backend first
+    try {
+      await ml5.tf.setBackend('webgl');
+      await ml5.tf.ready();
+      console.log('✅ WebGL backend ready');
+    } catch (e) {
+      await ml5.tf.setBackend('cpu');
+      await ml5.tf.ready();
+      console.log('✅ CPU backend ready');
+    }
+    
+    let classifierOptions = { task: "classification" };
+    classifier = ml5.neuralNetwork(classifierOptions);
+    
+    let modelDetails = {
+      model: "models/hospital-sentiment-latest/model/model_hospital-sentiment-latest.json",
+      metadata: "models/hospital-sentiment-latest/model/model_hospital-sentiment-latest_meta.json", 
+      weights: "models/hospital-sentiment-latest/model/model_hospital-sentiment-latest.weights.bin"
+    };
+    
+    classifier.load(modelDetails, () => {
+      modelVocab = [...realVocab];  
+      console.log('✅ modelVocab ready:', modelVocab.length);
+      modelTrained = true;
+      isTrainingMode = false;
+      document.querySelector('#predictBtn').disabled = false;  // ENABLE loaded model
+      console.log('✅ Model loaded!');
+      if (globalStatus) globalStatus.textContent = '✅ Ready for predictions!';
+    });
+  } catch (err) {
+    console.error('❌ Model failed:', err);
+  }
 }
 
 init();

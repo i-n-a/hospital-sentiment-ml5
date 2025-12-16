@@ -39,8 +39,15 @@ body {
 
 .page-header-row {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  justify-content:center;
+  gap:2px;
   margin-bottom: 16px;
+}
+.printButton-wrapper{
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
 }
 
 /* DASHBOARD (canvas) */
@@ -50,7 +57,7 @@ body {
 #dashboard-wrapper {
   width: 100%;
   max-width: 1200px;  /* Never wider than main */
-  margin: 0 auto 40px;  /* Center + space below */
+  margin: 0 auto;  /* Center + space below */
   padding: 0;      /* Side padding on mobile */
 }
 
@@ -205,32 +212,43 @@ button:active {
 }
 
 @media print {
-  body {
+  
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
     background: #ffffff;
   }
 
-  main {
-    max-width: none;
+  /* Show only the dashboard wrapper and its contents */
+  #dashboard-wrapper,
+  #dashboard-wrapper * {
+    visibility: visible;
+    border-radius: 0 !important; 
+    box-shadow: none !important;
+  }
+
+  /* Ensure the dashboard is positioned at the top-left on the printed page */
+  #dashboard-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto !important;
     margin: 0;
     padding: 0;
   }
-  #dashboard-wrapper {
-    max-width: none;
-    padding: 0;
-  }
-  
+
   #dashboard canvas {
-    max-height: none !important;
-    min-height: auto !important;
-    height: 100vh !important;
-  }
+  width: 100% !important;
+  height: auto !important;
+  padding-top: 42px;
+  background:rgb(245,245,245);
+}
 
-  /* Hide the interactive classification tools */
-  .tool-card {
-    display: none !important;
-  }
-
-  /* Don’t print the export button */
+  /* Already in your CSS, keep or merge with this: */
+  .tool-card,
+  .data-section,
+  .app-header,
   #printButton {
     display: none !important;
   }
@@ -265,3 +283,101 @@ button:active {
 .sent-neg { background: #ffe5e5; }
 .sent-neu { background: #f3f3f3; }
 .sent-pos { background: #e4f7ec; }
+
+.data-section details { 
+  background: #f8fafc; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 12px; 
+  margin-top: 24px;
+}
+
+.data-controls {
+  padding: 0 20px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));  /* Bigger */
+  gap: 20px;
+  padding: 0 20px 24px;
+  max-height: 600px;  /* Taller */
+}
+
+.data-item {
+  min-height: 140px;  /* Full comment space */
+  padding: 20px;
+}
+
+.data-item.negativo { border-left: 4px solid #ef4444; }
+.data-item.positivo { border-left: 4px solid #10b981; }
+.data-item.neutro { border-left: 4px solid #6b7280; }
+
+.data-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+.data-section {
+  width: 100%;
+  max-width: 1200px;
+  margin: 24px auto;  /* Center full width */
+}
+
+.section-toggle {
+  width: 100% !important;  /* Full container width */
+  display: block !important;
+}
+
+.section-toggle summary {
+  padding: 20px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  list-style: none;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  div{
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+  }
+}
+
+/* 🔥 VERTICAL STACK - Comments count BELOW */
+#commentsCount {
+  display: block !important;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* Controls FULL WIDTH below */
+.data-controls {
+  padding: 0 20px 16px;
+  display: flex;
+  flex-direction: column;  /* 🔥 VERTICAL STACK */
+  gap: 12px;
+  align-items: stretch;    /* Full width inputs */
+  width: 100%;
+}
+
+/* Search input full width */
+#searchComments {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+}
+
+/* Pagination buttons row */
+.data-controls > *:last-child {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+

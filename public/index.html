@@ -17,11 +17,12 @@
   </header>
 
   <main class="page-shell">
+ 
     <section class="tool-card">
       <div class="tool-block">
         <h2>Carregar CSV de comentários</h2>
         <p class="helper">
-          Ficheiro CSV com colunas <code>sentiment</code>, <code>comentário</code> e <code>classificacao</code>.
+          Ficheiro CSV com colunas, <code>comentário</code> e <code>classificacao</code>.
           Só a coluna de comentário é usada para a predição.
         </p>
 
@@ -30,25 +31,52 @@
         <div class="tool-card__actions">
           <button id="processCsvButton">Classificar CSV</button>
         </div>
-
-        <div id="csvSummary" class="result-text"></div>
-        <div id="csvTable" class="result-table"></div>
       </div>
     </section>
-
+   
     <div class="page-header-row">
-      
-      <button id="printButton" class="primary-ghost">
+      <div id="dashboard-wrapper">
+        <div id="dashboard"></div>
+      </div>
+      <div class="printButton-wrapper">
+        <button id="printButton" class="primary-ghost">
         Exportar relatório (PDF)
-      </button>
+        </button>
+      </div>
     </div>
+  
+    <section class="data-section">
+      <details class="section-toggle" open>
+        <summary>
+          <div>
+            Comentários Analisados 
+            <span id="commentsCount">(0)</span>
+          </div>
+          <span class="toggle-icon">+</span>
+        </summary>
+        
+        <div class="data-controls">
+          <input id="searchComments" placeholder="🔍 Procurar comentários...">
+          <select id="sentimentFilter">
+            <option value="all">Todos</option>
+            <option value="negativo">Negativos</option>
+            <option value="positivo">Positivos</option>
+            <option value="neutro">Neutros</option>
+          </select>
+          <div>
+            <button id="prevPage">← Anterior</button>
+            <span id="pageInfo">Página 1 de 17</span>
+            <button id="nextPage">Próxima →</button>
+          </div>
+          
+        </div>
+        
+        <div id="data-list" class="data-grid">
+          <!-- Populated by JS -->
+        </div>
+      </details>
+    </section>
 
-    <!-- Canvas lives here -->
-    <div id="dashboard-wrapper">
-      <div id="dashboard"></div>
-    </div>
-     
-    <!-- CLASSIFICATION TOOLS: one grouped card -->
     <section class="tool-card tool-card--double">
       <div class="tool-block">
         <h2>Classificar novo comentário</h2>
@@ -79,7 +107,7 @@
       </div>
     </section>
 
-    </main>
+  </main>
 
   <script type="module" src="./js/ml5/text-utils.js"></script>
   <script type="module" src="./js/pages/marketing-dashboard.js"></script>

@@ -52,24 +52,21 @@ function updateHtmlBars() {
 }
 
 // ===== PAGINATED DATA LIST =====
+
 function renderDataList() {
-  const filtered = vizData.trainingData.filter(item => 
+  const filtered = vizData.trainingData.filter(item =>
     vizData.filter === 'all' || item.label === vizData.filter
   );
-  
+
   const start = (vizData.currentPage - 1) * vizData.itemsPerPage;
   const pageData = filtered.slice(start, start + vizData.itemsPerPage);
-  
+
   document.getElementById('data-list').innerHTML = pageData.map(item => `
-    <div class="data-item ${item.label}">
+    <div class="data-item ${item.label}" title="${item.text}">
       <strong>${item.label.toUpperCase()}</strong><br>
-      <small>"${truncateText(item.text, 120)}"</small>
+      <div class="data-text">${item.text}</div>
     </div>
   `).join('');
-}
-
-function truncateText(text, maxLen) {
-  return text.length > maxLen ? text.slice(0, maxLen) + '...' : text;
 }
 
 // ===== PAGINATION CONTROLS =====
@@ -95,7 +92,6 @@ function updatePagination() {
   }
 }
 
-// ===== PUBLIC API (window globals for event handlers) =====
 // ===== FIXED PAGINATION (handles FILTERING!) =====
 export function setPage(page) {
   // 🔥 FIXED: Use FILTERED length for total pages
@@ -124,12 +120,11 @@ export function setFilter(filter) {
   updatePagination();
 }
 
-
 // ===== P5.JS CANVAS =====
 function startP5Canvas() {
   vizSketch = new p5((sketch) => {
     sketch.setup = () => {
-      sketch.createCanvas(600, 300).parent('ml-viz');
+      sketch.createCanvas(1000, 300).parent('ml-viz');
     };
     
     sketch.draw = () => {
@@ -140,32 +135,58 @@ function startP5Canvas() {
       sketch.fill(40);
       sketch.textSize(20);
       sketch.text('Sentiment Distribution', sketch.width/2, 40);
-      
-      const barWidth = sketch.width / 3 - 20;
-      const barHeight = 150;
+  
       const xOffset = 50;
+      const barWidth = 200;
+      const barGap = 40;
+      const barHeight = 150;
+
+      const chartWidth = (barWidth * 3) + (barGap * 2);
+      const startX = (sketch.width - chartWidth) / 2;
+
       
       // Bars (negative/neutral/positive)
       const colors = [[239,68,68], [234,179,8], [16,185,129]];
       const labels = ['Negativo', 'Neutro', 'Positivo'];
       
       for (let i = 0; i < 3; i++) {
-        const width = total ? (Object.values(counts)[i] / total) * barWidth : 0;
+        const value = Object.values(counts)[i];
+        const w = total ? (value / total) * barWidth : 0;
+
+        const x = startX + i * (barWidth + barGap);
+        const y = 80;
+
         sketch.fill(...colors[i]);
-        sketch.rect(xOffset + i * 170, 80, width, barHeight);
-        
-        // 🔥 FIXED: Black text instead of white
-        sketch.fill(0);  // Black text
+        sketch.rect(x, y, w, barHeight);
+
+        sketch.fill(0);
         sketch.textSize(14);
-        sketch.text(Object.values(counts)[i], xOffset + i * 170 + barWidth/2, 110);
-        
-        sketch.fill(40);  // Dark text for labels
+        sketch.text(value, x + barWidth / 2, y + 30);
+
+        sketch.fill(40);
         sketch.textSize(16);
-        sketch.text(labels[i], xOffset + i * 170 + barWidth/2, 70);
+        sketch.text(labels[i], x + barWidth / 2, y - 10);
       }
     };
   });
 }
+
+export function updateSentimentViz(newData) {
+  vizData.trainingData = newData;
+  updateVizData();
+  updateHtmlBars();
+  renderDataList();
+  updatePagination();
+  
+  // 🔥 Update p5 canvas data (no recreate)
+  if (vizSketch) {
+    vizSketch.redraw();  // Trigger p5 redraw
+  }
+  
+  console.log('📊 Viz updated with new data:', newData.length, 'examples');
+}
+
+window.updateSentimentVizImpl = updateSentimentViz;
 
 // ===== MAIN INIT (single entry point) =====
 export function initSentimentViz(trainingData) {
@@ -174,7 +195,7 @@ export function initSentimentViz(trainingData) {
   vizData.trainingData = trainingData;
   updateVizData();
 
-  // 🔥 FIXED: Set globals BEFORE any UI wiring
+  // 🔥 Set globals BEFORE any UI wiring
   window.currentPage = 1;
   window.totalPages = Math.ceil(trainingData.length / vizData.itemsPerPage);
   
