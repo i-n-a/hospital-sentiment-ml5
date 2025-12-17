@@ -1143,3 +1143,30 @@ textarea:focus, input:focus, select:focus {
   width: 100%;
   margin-bottom: 1rem;
 }
+
+/* dark mode */
+
+@media (prefers-color-scheme: dark) {
+  body{
+    background-color:#434343 ;
+    color: black;
+  }
+
+  h3{
+    color: black;
+  }
+
+  .status-badge{
+    background-color: #f3f4f6;
+    color: var(--gray-700);
+  }
+
+  .section-toggle{
+    background-color: #f3f4f6;
+  }
+
+  #pageInfo{
+    background-color: #f3f4f6;
+  }
+  
+}
