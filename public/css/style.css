@@ -1168,5 +1168,14 @@ textarea:focus, input:focus, select:focus {
   #pageInfo{
     background-color: #f3f4f6;
   }
-  
+
+  nav-link.active {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .nav-link:hover {
+    background: #f3f4f6;
+    transform: translateY(-1px);
+  }
 }
